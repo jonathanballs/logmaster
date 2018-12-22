@@ -3,6 +3,7 @@ docs.json
 __dummy.html
 docs/
 /logmaster
+/testlogger*
 logmaster.so
 logmaster.dylib
 logmaster.dll
