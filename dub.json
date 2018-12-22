@@ -1,0 +1,9 @@
+{
+	"description": "A log viewer",
+	"license": "proprietary",
+	"authors": [
+		"Jonathan Balls"
+	],
+	"copyright": "Copyright © 2018, Jonathan Balls",
+	"name": "logmaster"
+}

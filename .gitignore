@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+logmaster.so
+logmaster.dylib
+logmaster.dll
+logmaster.a
+logmaster.lib
+logmaster-test-*
+*.exe
+*.o
+*.obj
+*.lst
