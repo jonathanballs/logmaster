@@ -12,41 +12,17 @@ import gtk.ListStore;
 import gtk.TreeIter;
 
 import logmaster.unixStreamBackend;
+import logmaster.logmasterwindow;
 
 void main(string[] args)
 {
-    //writeln("Logmaster logging library");
-    //auto l = new UnixStreamBackend(stdin);
-    //l.readLines();
+    // TODO: Argument parsing
 
     /*
      * Create window
      */
     Main.init(args);
-    auto window = new MainWindow("Logmaster");
-    window.setDefaultSize(1000, 600);
-    auto header = new HeaderBar();
-    header.setTitle("Logmaster");
-    header.setShowCloseButton(true);
-    window.setTitlebar(header);
-
-    // List of data
-    auto listStore = new ListStore([GType.STRING]);
-    foreach(int i; 0..10) {
-        TreeIter iter = listStore.createIter();
-        listStore.setValue(iter, 0, "log message");
-    }
-
-    // Add a table for displaying logs
-    auto logviewer = new TreeView();
-    auto column = new TreeViewColumn("message", new CellRendererText(), "text", 0);
-    column.setResizable(true);
-    column.setMinWidth(200);
-    logviewer.appendColumn(column);
-    logviewer.setModel(listStore);
-
-    window.add(logviewer);
-
+    auto window = new LogmasterWindow();
     window.showAll();
     Main.run();
 }
