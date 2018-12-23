@@ -2,17 +2,9 @@ import std.stdio;
 import std.getopt;
 
 import gtk.Main;
-import gtk.MainWindow;
-import gtk.HeaderBar;
-import gtk.TreeView;
-import gtk.TreeViewColumn;
-import gtk.ListStore;
-import gtk.CellRendererText;
-import gtk.ListStore;
-import gtk.TreeIter;
 
-import logmaster.unixStreamBackend;
-import logmaster.logmasterwindow;
+import logmaster.backends.stream;
+import logmaster.window;
 
 void main(string[] args)
 {

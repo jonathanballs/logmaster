@@ -1,4 +1,4 @@
-module logmaster.logmasterwindow;
+module logmaster.window;
 
 import gtk.CellRendererText;
 import gtk.HeaderBar;
@@ -35,7 +35,6 @@ class LogmasterWindow : MainWindow {
             TreeIter iter = listStore.createIter();
             listStore.setValue(iter, 0, "log message");
         }
-
 
         // Add a table for displaying logs
         auto logviewer = new TreeView();

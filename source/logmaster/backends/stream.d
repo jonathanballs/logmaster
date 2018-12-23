@@ -2,7 +2,7 @@
  * Unix stream backend. Predominantly used for logs arriving via stdin
  */
 
-module logmaster.unixStreamBackend;
+module logmaster.backends.stream;
 
 import std.stdio;
 import std.string;
