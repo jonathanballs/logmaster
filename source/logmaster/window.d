@@ -8,11 +8,23 @@ import gtk.Paned;
 import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
+import gtk.Widget;
+
+import gdk.FrameClock;
+
+import std.concurrency;
+import std.stdio;
+import core.thread;
+
+
+import glib.Timeout;
 
 import logmaster.constants;
 
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
+    ListStore logs;
+
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
         // Initialise
@@ -30,11 +42,7 @@ class LogmasterWindow : MainWindow {
         auto paned = new Paned(Orientation.HORIZONTAL);
 
         // List of data
-        auto listStore = new ListStore([GType.STRING]);
-        foreach(int i; 0..10) {
-            TreeIter iter = listStore.createIter();
-            listStore.setValue(iter, 0, "log message");
-        }
+        logs = new ListStore([GType.STRING]);
 
         // Add a table for displaying logs
         auto logviewer = new TreeView();
@@ -42,8 +50,21 @@ class LogmasterWindow : MainWindow {
         column.setResizable(true);
         column.setMinWidth(200);
         logviewer.appendColumn(column);
-        logviewer.setModel(listStore);
+        logviewer.setModel(logs);
+
+        this.addTickCallback(&this.receiveBackendEvents);
 
         this.add(logviewer);
+    }
+
+    bool receiveBackendEvents(Widget w, FrameClock f) {
+        receiveTimeout(-1.msecs,
+            (string s) {
+                TreeIter iter = logs.createIter();
+                logs.setValue(iter, 0, s);
+            }
+        );
+
+        return true;
     }
 }

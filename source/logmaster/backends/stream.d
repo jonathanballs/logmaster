@@ -8,6 +8,7 @@ import std.stdio;
 import std.string;
 import std.file;
 import std.conv : to;
+import std.concurrency;
 
 import core.stdc.stdlib;
 import core.sys.posix.fcntl;
@@ -25,6 +26,7 @@ void checkErr(int errNum) {
 class UnixStreamBackend {
     string[] backlog;
     File stream;
+    Tid tid;
 
     this(File stdStream) {
         this.stream = stdStream;
@@ -38,16 +40,16 @@ class UnixStreamBackend {
         /*
          * Attach stream to a pty
          */
-        auto f = open("/dev/ptmx", O_RDWR);
-        checkErr(grantpt(f));
-        checkErr(unlockpt(f));
-        char* name = ptsname(f);
-        writeln("PTS slave is " ~ to!string(name));
+        // auto f = open("/dev/ptmx", O_RDWR);
+        // checkErr(grantpt(f));
+        // checkErr(unlockpt(f));
+        // char* name = ptsname(f);
+        // writeln("PTS slave is " ~ to!string(name));
 
         while (!stdin.eof) {
-            auto line = stdin.readln().chomp();
+            string line = stdin.readln().chomp();
             backlog ~= line;
-            writeln(backlog.length, " ", line);
+            tid.send(line);
         }
     }
 }
