@@ -9,6 +9,8 @@ import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
+import gtk.StackSidebar;
+import gtk.Stack;
 
 import gdk.FrameClock;
 
@@ -41,6 +43,14 @@ class LogmasterWindow : MainWindow {
         // Paned view
         auto paned = new Paned(Orientation.HORIZONTAL);
 
+        // Add the sidebar and sidebar stack
+        auto sidebar = new StackSidebar();
+        auto sidebarStack = new Stack();
+
+        sidebar.setStack(sidebarStack);
+        paned.pack1(sidebar, true, true);
+        paned.pack2(sidebarStack, true, true);
+
         // List of data
         logs = new ListStore([GType.STRING]);
 
@@ -51,10 +61,15 @@ class LogmasterWindow : MainWindow {
         column.setMinWidth(200);
         logviewer.appendColumn(column);
         logviewer.setModel(logs);
+        sidebarStack.addTitled(logviewer, "stdin", "stdin");
+
+        // Add an example log
+        TreeIter iter = logs.createIter();
+        logs.setValue(iter, 0, "No logs yet");
 
         this.addTickCallback(&this.receiveBackendEvents);
 
-        this.add(logviewer);
+        this.add(paned);
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {
