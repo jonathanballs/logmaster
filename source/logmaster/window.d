@@ -5,12 +5,13 @@ import gtk.HeaderBar;
 import gtk.ListStore;
 import gtk.MainWindow;
 import gtk.Paned;
+import gtk.ScrolledWindow;
+import gtk.Stack;
+import gtk.StackSidebar;
 import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
-import gtk.StackSidebar;
-import gtk.Stack;
 
 import gdk.FrameClock;
 
@@ -55,13 +56,15 @@ class LogmasterWindow : MainWindow {
         logs = new ListStore([GType.STRING]);
 
         // Add a table for displaying logs
+        auto scrolledWindow = new ScrolledWindow();
         auto logviewer = new TreeView();
         auto column = new TreeViewColumn("message", new CellRendererText(), "text", 0);
         column.setResizable(true);
         column.setMinWidth(200);
         logviewer.appendColumn(column);
         logviewer.setModel(logs);
-        sidebarStack.addTitled(logviewer, "stdin", "stdin");
+        scrolledWindow.add(logviewer);
+        sidebarStack.addTitled(scrolledWindow, "stdin", "stdin");
 
         // Add an example log
         TreeIter iter = logs.createIter();
