@@ -23,12 +23,12 @@ import glib.Timeout;
 import logmaster.backends.stream;
 import logmaster.backendthread;
 import logmaster.constants;
+import logmaster.logviewer;
 
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
-    ListStore logs;
-
     BackendThread[] backends;
+    LogViewer logViewer;
 
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
@@ -57,29 +57,12 @@ class LogmasterWindow : MainWindow {
         paned.pack1(sidebar, false, false);
         paned.pack2(sidebarStack, true, true);
 
-        // List of data
-        logs = new ListStore([GType.STRING]);
-
-        // Add a table for displaying logs
-        auto scrolledWindow = new ScrolledWindow();
-        auto logviewer = new TreeView();
-        logviewer.getSelection().setMode(GtkSelectionMode.NONE);
-        auto cellRendererText = new CellRendererText();
-        cellRendererText.setProperty("family", "Monospace");
-        cellRendererText.setProperty("size-points", 10);
-
-        // Add column to logviewer
-        auto column = new TreeViewColumn("message", cellRendererText, "text", 0);
-        column.setResizable(true);
-        column.setMinWidth(200);
-        logviewer.appendColumn(column);
-        logviewer.setModel(logs);
-        scrolledWindow.add(logviewer);
-        sidebarStack.addTitled(scrolledWindow, "stdin", "stdin");
+        logViewer = new LogViewer();
+        sidebarStack.addTitled(logViewer, "stdin", "stdin");
 
         // Add an example log
-        TreeIter iter = logs.createIter();
-        logs.setValue(iter, 0, "No logs yet");
+        TreeIter iter = logViewer.listStore.createIter();
+        logViewer.listStore.setValue(iter, 0, "No logs yet");
 
         this.addTickCallback(&this.receiveBackendEvents);
 
@@ -100,8 +83,8 @@ class LogmasterWindow : MainWindow {
     bool receiveBackendEvents(Widget w, FrameClock f) {
         receiveTimeout(-1.msecs,
             (string s) {
-                TreeIter iter = logs.createIter();
-                logs.setValue(iter, 0, s);
+                TreeIter iter = logViewer.listStore.createIter();
+                logViewer.listStore.setValue(iter, 0, s);
             }
         );
 
