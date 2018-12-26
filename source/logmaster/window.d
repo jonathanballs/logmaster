@@ -1,5 +1,10 @@
 module logmaster.window;
 
+import std.concurrency;
+import std.stdio;
+import core.thread;
+
+import gtk.Button;
 import gtk.CellRendererText;
 import gtk.HeaderBar;
 import gtk.ListStore;
@@ -12,21 +17,18 @@ import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
-
 import gdk.FrameClock;
-
-import std.concurrency;
-import std.stdio;
-import core.thread;
-
-
 import glib.Timeout;
 
+import logmaster.backends.stream;
+import logmaster.backendthread;
 import logmaster.constants;
 
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
     ListStore logs;
+
+    BackendThread[] backends;
 
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
@@ -39,6 +41,8 @@ class LogmasterWindow : MainWindow {
         auto header = new HeaderBar();
         header.setTitle(Constants.appName);
         header.setShowCloseButton(true);
+        auto openLogButton = new Button("Open Log");
+        header.packStart(openLogButton);
         this.setTitlebar(header);
 
         // Paned view
@@ -49,7 +53,8 @@ class LogmasterWindow : MainWindow {
         auto sidebarStack = new Stack();
 
         sidebar.setStack(sidebarStack);
-        paned.pack1(sidebar, true, true);
+        sidebar.setSizeRequest(Constants.sidebarDefaultWidth, -1);
+        paned.pack1(sidebar, false, false);
         paned.pack2(sidebarStack, true, true);
 
         // List of data
@@ -58,7 +63,11 @@ class LogmasterWindow : MainWindow {
         // Add a table for displaying logs
         auto scrolledWindow = new ScrolledWindow();
         auto logviewer = new TreeView();
-        auto column = new TreeViewColumn("message", new CellRendererText(), "text", 0);
+        auto cellRendererText = new CellRendererText();
+        cellRendererText.setProperty("family", "Monospace");
+
+        // Add column to logviewer
+        auto column = new TreeViewColumn("message", cellRendererText, "text", 0);
         column.setResizable(true);
         column.setMinWidth(200);
         logviewer.appendColumn(column);
@@ -73,6 +82,17 @@ class LogmasterWindow : MainWindow {
         this.addTickCallback(&this.receiveBackendEvents);
 
         this.add(paned);
+    }
+
+    void openStream(File f, string streamName) {
+        auto backend = new UnixStreamBackend(stdin, "stdin");
+        BackendThread backendThread = new BackendThread(backend);
+        this.addBackend(backendThread);
+    }
+
+    void addBackend(BackendThread backend) {
+        backend.start();
+        this.backends ~= backend;
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {

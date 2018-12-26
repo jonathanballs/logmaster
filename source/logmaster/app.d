@@ -18,8 +18,8 @@ void main(string[] args)
     Main.init(args);
     auto window = new LogmasterWindow();
 
-    auto backend = new UnixStreamBackend(stdin);
-    auto backendThread = new BackendThread(backend).start();
+    // TODO find out source of stdin
+    window.openStream(stdin, "stdin");
 
     window.showAll();
     Main.run();

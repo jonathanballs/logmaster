@@ -28,7 +28,7 @@ class UnixStreamBackend {
     File stream;
     Tid tid;
 
-    this(File stdStream) {
+    this(File stdStream, string name = "unix stream") {
         this.stream = stdStream;
     }
 
