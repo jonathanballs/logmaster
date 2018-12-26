@@ -63,8 +63,10 @@ class LogmasterWindow : MainWindow {
         // Add a table for displaying logs
         auto scrolledWindow = new ScrolledWindow();
         auto logviewer = new TreeView();
+        logviewer.getSelection().setMode(GtkSelectionMode.NONE);
         auto cellRendererText = new CellRendererText();
         cellRendererText.setProperty("family", "Monospace");
+        cellRendererText.setProperty("size-points", 10);
 
         // Add column to logviewer
         auto column = new TreeViewColumn("message", cellRendererText, "text", 0);
