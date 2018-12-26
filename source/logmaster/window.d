@@ -60,11 +60,6 @@ class LogmasterWindow : MainWindow {
         logViewer = new LogViewer();
         sidebarStack.addTitled(logViewer, "stdin", "stdin");
 
-        // Add an example log
-        TreeIter iter = logViewer.listStore.createIter();
-        logViewer.listStore.setValue(iter, 0, "No logs yet");
-
-        this.addTickCallback(&this.receiveBackendEvents);
 
         this.add(paned);
     }
@@ -80,14 +75,4 @@ class LogmasterWindow : MainWindow {
         this.backends ~= backend;
     }
 
-    bool receiveBackendEvents(Widget w, FrameClock f) {
-        receiveTimeout(-1.msecs,
-            (string s) {
-                TreeIter iter = logViewer.listStore.createIter();
-                logViewer.listStore.setValue(iter, 0, s);
-            }
-        );
-
-        return true;
-    }
 }

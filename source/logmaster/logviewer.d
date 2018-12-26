@@ -1,10 +1,15 @@
 module logmaster.logviewer;
 
+import std.concurrency;
+import core.thread;
+import gdk.FrameClock;
 import gtk.CellRendererText;
 import gtk.ListStore;
 import gtk.ScrolledWindow;
+import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
+import gtk.Widget;
 
 class LogViewer : ScrolledWindow {
     TreeView treeView;
@@ -32,6 +37,23 @@ class LogViewer : ScrolledWindow {
         treeView.appendColumn(column);
         treeView.setModel(listStore);
 
+        // Add a log saying there are no logs
+        TreeIter iter = this.listStore.createIter();
+        this.listStore.setValue(iter, 0, "No logs yet");
+
+        this.addTickCallback(&this.receiveBackendEvents);
+
         this.add(treeView);
+    }
+
+    bool receiveBackendEvents(Widget w, FrameClock f) {
+        while(receiveTimeout(-1.msecs,
+            (string s) {
+                TreeIter iter = this.listStore.createIter();
+                this.listStore.setValue(iter, 0, s);
+            }
+        )) {}
+
+        return true;
     }
 }
