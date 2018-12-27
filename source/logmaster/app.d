@@ -20,6 +20,7 @@ void main(string[] args)
 
     // TODO find out source of stdin
     window.openStream(stdin, "stdin");
+    window.openFile("/var/log/pacman.log");
 
     window.showAll();
     Main.run();

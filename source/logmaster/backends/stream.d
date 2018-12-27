@@ -13,9 +13,11 @@ import std.concurrency;
 import core.stdc.stdlib;
 import core.sys.posix.fcntl;
 
-extern(C) int grantpt(int fd);
-extern(C) int unlockpt(int fd);
-extern(C) char *ptsname(int fd);
+import logmaster.backend;
+
+// extern(C) int grantpt(int fd);
+// extern(C) int unlockpt(int fd);
+// extern(C) char *ptsname(int fd);
 
 void checkErr(int errNum) {
     if (errNum != 0) {
@@ -23,20 +25,15 @@ void checkErr(int errNum) {
     }
 }
 
-class UnixStreamBackend {
-    string[] backlog;
+class UnixStreamBackend : LoggingBackend {
     File stream;
-    Tid tid;
 
-    this(File stdStream, string name = "unix stream") {
+    this(File stdStream, string _title = "unix stream") {
+        super(_title);
         this.stream = stdStream;
     }
 
-    int numReadLines() {
-        return cast(int) this.backlog.length;
-    }
-
-    void readLines() {
+    override void readLines() {
         /*
          * Attach stream to a pty
          */
@@ -47,9 +44,8 @@ class UnixStreamBackend {
         // writeln("PTS slave is " ~ to!string(name));
 
         while (!stdin.eof) {
-            string line = stdin.readln().chomp();
-            backlog ~= line;
-            tid.send(line);
+            string line = this.stream.readln().chomp();
+            this.newLogLineCallback(line);
         }
     }
 }

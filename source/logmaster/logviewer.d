@@ -11,49 +11,47 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 
+import logmaster.backendthread;
+
 class LogViewer : ScrolledWindow {
+
+    // Meta
+    string title;
+
+    // Implementation
     TreeView treeView;
     ListStore listStore;
 
     this() {
         /*
-         * Create tree view
+         * Create tree view and list store
          */
-
         this.treeView = new TreeView();
         this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
+        this.listStore = new ListStore([GType.STRING]);
+        treeView.setModel(listStore);
 
+        /*
+         * Text rendering
+         */
         auto cellRendererText = new CellRendererText();
         cellRendererText.setProperty("family", "Monospace");
         cellRendererText.setProperty("size-points", 10);
 
-        // List of data
-        listStore = new ListStore([GType.STRING]);
-
-        // Add column to treeview for log messages
+        /*
+         * Add Column to tree view for messages
+         */
         auto column = new TreeViewColumn("message", cellRendererText, "text", 0);
         column.setResizable(true);
         column.setMinWidth(200);
-        treeView.appendColumn(column);
-        treeView.setModel(listStore);
+        this.treeView.appendColumn(column);
 
-        // Add a log saying there are no logs
-        TreeIter iter = this.listStore.createIter();
-        this.listStore.setValue(iter, 0, "No logs yet");
-
-        this.addTickCallback(&this.receiveBackendEvents);
+        /*
+         * Set default message saying that there aren't any logs yet
+         */
+        // TreeIter iter = this.listStore.createIter();
+        // this.listStore.setValue(iter, 0, "No logs yet");
 
         this.add(treeView);
-    }
-
-    bool receiveBackendEvents(Widget w, FrameClock f) {
-        while(receiveTimeout(-1.msecs,
-            (string s) {
-                TreeIter iter = this.listStore.createIter();
-                this.listStore.setValue(iter, 0, s);
-            }
-        )) {}
-
-        return true;
     }
 }

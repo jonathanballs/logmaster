@@ -20,15 +20,25 @@ import gtk.Widget;
 import gdk.FrameClock;
 import glib.Timeout;
 
-import logmaster.backends.stream;
 import logmaster.backendthread;
 import logmaster.constants;
 import logmaster.logviewer;
 
+
+// Reminder for jonny when u get back
+// You were just in the middle of implementing threading code
+// The problem is the thread ids
+// Do it again carefully and make sure that the right ids are in the right place
+
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
     BackendThread[] backends;
-    LogViewer logViewer;
+    LogViewer[ThreadID] logViewers;
+
+    HeaderBar headerBar;
+    Paned paned;
+    StackSidebar sidebar;
+    Stack logViewerStack;
 
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
@@ -38,41 +48,65 @@ class LogmasterWindow : MainWindow {
             Constants.appDefaultHeight);
 
         // Header bar
-        auto header = new HeaderBar();
-        header.setTitle(Constants.appName);
-        header.setShowCloseButton(true);
+        headerBar = new HeaderBar();
+        headerBar.setTitle(Constants.appName);
+        headerBar.setShowCloseButton(true);
         auto openLogButton = new Button("Open Log");
-        header.packStart(openLogButton);
-        this.setTitlebar(header);
+        headerBar.packStart(openLogButton);
+        this.setTitlebar(headerBar);
 
         // Paned view
-        auto paned = new Paned(Orientation.HORIZONTAL);
+        paned = new Paned(Orientation.HORIZONTAL);
 
         // Add the sidebar and sidebar stack
-        auto sidebar = new StackSidebar();
-        auto sidebarStack = new Stack();
+        sidebar = new StackSidebar();
+        logViewerStack = new Stack();
 
-        sidebar.setStack(sidebarStack);
+        sidebar.setStack(logViewerStack);
         sidebar.setSizeRequest(Constants.sidebarDefaultWidth, -1);
         paned.pack1(sidebar, false, false);
-        paned.pack2(sidebarStack, true, true);
-
-        logViewer = new LogViewer();
-        sidebarStack.addTitled(logViewer, "stdin", "stdin");
-
+        paned.pack2(logViewerStack, true, true);
+        this.addTickCallback(&this.receiveBackendEvents);
 
         this.add(paned);
     }
 
-    void openStream(File f, string streamName) {
-        auto backend = new UnixStreamBackend(stdin, "stdin");
+    void openFile(string filename) {
+        import logmaster.backends.file;
+        auto backend = new FileBackend(filename);
         BackendThread backendThread = new BackendThread(backend);
         this.addBackend(backendThread);
     }
 
-    void addBackend(BackendThread backend) {
-        backend.start();
-        this.backends ~= backend;
+    void openStream(File f, string streamName) {
+        import logmaster.backends.stream;
+        auto backend = new UnixStreamBackend(stdin, streamName);
+        BackendThread backendThread = new BackendThread(backend);
+        this.addBackend(backendThread);
     }
 
+    bool receiveBackendEvents(Widget w, FrameClock f) {
+        while(receiveTimeout(-1.msecs,
+            (shared BeventNewLogLines event) {
+                auto logViewer = this.logViewers[cast(ThreadID)event.threadId];
+                TreeIter iter = logViewer.listStore.createIter();
+                logViewer.listStore.setValue(iter, 0, event.line);
+            }
+        )) {}
+
+        return true;
+    }
+
+    void addBackend(BackendThread backend) {
+        // Create 
+        backend.start();
+        this.backends ~= backend;
+        auto logViewer = new LogViewer();
+        logViewers[backend.id] = logViewer;
+        writeln(logViewers);
+
+        logViewerStack.addTitled(logViewer,
+            backend.backend.title,
+            backend.backend.title);
+    }
 }
