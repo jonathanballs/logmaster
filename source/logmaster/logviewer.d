@@ -11,8 +11,6 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 
-import logmaster.backendthread;
-
 class LogViewer : ScrolledWindow {
 
     // Meta

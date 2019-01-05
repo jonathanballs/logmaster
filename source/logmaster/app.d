@@ -3,9 +3,6 @@ import std.getopt;
 import std.concurrency;
 
 import gtk.Main;
-
-import logmaster.backends.stream;
-import logmaster.backendthread;
 import logmaster.window;
 
 void main(string[] args)

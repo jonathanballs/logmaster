@@ -20,7 +20,7 @@ import gtk.Widget;
 import gdk.FrameClock;
 import glib.Timeout;
 
-import logmaster.backendthread;
+import logmaster.backend;
 import logmaster.constants;
 import logmaster.logviewer;
 
@@ -32,8 +32,8 @@ import logmaster.logviewer;
 
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
-    BackendThread[] backends;
-    LogViewer[ThreadID] logViewers;
+    LoggingBackend[] backends;
+    LogViewer[Tid] logViewers;
 
     HeaderBar headerBar;
     Paned paned;
@@ -74,21 +74,19 @@ class LogmasterWindow : MainWindow {
     void openFile(string filename) {
         import logmaster.backends.file;
         auto backend = new FileBackend(filename);
-        BackendThread backendThread = new BackendThread(backend);
-        this.addBackend(backendThread);
+        this.addBackend(backend);
     }
 
     void openStream(File f, string streamName) {
         import logmaster.backends.stream;
         auto backend = new UnixStreamBackend(stdin, streamName);
-        BackendThread backendThread = new BackendThread(backend);
-        this.addBackend(backendThread);
+        this.addBackend(backend);
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {
         while(receiveTimeout(-1.msecs,
             (shared BeventNewLogLines event) {
-                auto logViewer = this.logViewers[cast(ThreadID)event.threadId];
+                auto logViewer = this.logViewers[cast(Tid)event.tid];
                 TreeIter iter = logViewer.listStore.createIter();
                 logViewer.listStore.setValue(iter, 0, event.line);
             }
@@ -97,16 +95,12 @@ class LogmasterWindow : MainWindow {
         return true;
     }
 
-    void addBackend(BackendThread backend) {
-        // Create 
+    void addBackend(LoggingBackend backend) {
         backend.start();
         this.backends ~= backend;
         auto logViewer = new LogViewer();
-        logViewers[backend.id] = logViewer;
-        writeln(logViewers);
+        logViewers[backend.tid] = logViewer;
 
-        logViewerStack.addTitled(logViewer,
-            backend.backend.title,
-            backend.backend.title);
+        logViewerStack.addTitled(logViewer, backend.title, backend.title);
     }
 }
