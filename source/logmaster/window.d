@@ -7,6 +7,7 @@ import core.thread;
 import gtk.Button;
 import gtk.CellRendererText;
 import gtk.HeaderBar;
+import gtk.FileChooserDialog;
 import gtk.ListStore;
 import gtk.MainWindow;
 import gtk.Paned;
@@ -52,6 +53,7 @@ class LogmasterWindow : MainWindow {
         headerBar.setTitle(Constants.appName);
         headerBar.setShowCloseButton(true);
         auto openLogButton = new Button("Open Log");
+        openLogButton.addOnClicked(&onOpenFileClicked);
         headerBar.packStart(openLogButton);
         this.setTitlebar(headerBar);
 
@@ -69,6 +71,16 @@ class LogmasterWindow : MainWindow {
         this.addTickCallback(&this.receiveBackendEvents);
 
         this.add(paned);
+    }
+
+    void onOpenFileClicked(Button b) {
+        auto fileDialog = new FileChooserDialog("Open Log", this, FileChooserAction.OPEN);
+        auto res = fileDialog.run();
+        if (res == ResponseType.OK) {
+            auto filename = fileDialog.getFilename();
+            this.openFile(filename);
+        }
+        fileDialog.hide();
     }
 
     void openFile(string filename) {
@@ -102,5 +114,7 @@ class LogmasterWindow : MainWindow {
         logViewers[backend.tid] = logViewer;
 
         logViewerStack.addTitled(logViewer, backend.title, backend.title);
+        sidebar.setStack(logViewerStack);
+        this.showAll();
     }
 }
