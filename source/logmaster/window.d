@@ -19,6 +19,7 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 import gdk.FrameClock;
+import gdk.Keysyms;
 import glib.Timeout;
 
 import logmaster.backend;
@@ -70,7 +71,23 @@ class LogmasterWindow : MainWindow {
         paned.pack2(logViewerStack, true, true);
         this.addTickCallback(&this.receiveBackendEvents);
 
+        // Keyboard shortcut listener
+        this.addOnKeyPress(&this.onKeyPress);
         this.add(paned);
+    }
+
+    /*
+     * Keyboard Shortcuts
+     */
+    bool onKeyPress(GdkEventKey* g, Widget w) {
+
+        // If control key pressed
+        if (g.state & ModifierType.CONTROL_MASK) {
+            if(g.keyval == Keysyms.GDK_o) {
+                this.onOpenFileClicked(new Button());
+            }
+        }
+        return true;
     }
 
     void onOpenFileClicked(Button b) {
