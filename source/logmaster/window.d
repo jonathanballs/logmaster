@@ -83,8 +83,15 @@ class LogmasterWindow : MainWindow {
 
         // If control key pressed
         if (g.state & ModifierType.CONTROL_MASK) {
-            if(g.keyval == Keysyms.GDK_o) {
+            switch(g.keyval) {
+            case Keysyms.GDK_o:
                 this.onOpenFileClicked(new Button());
+                break;
+            case Keysyms.GDK_w:
+                writeln("Close window");
+                break;
+            default:
+                break;
             }
         }
         return true;
