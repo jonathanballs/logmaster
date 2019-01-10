@@ -8,12 +8,11 @@ import gtk.Button;
 import gtk.CellRendererText;
 import gtk.HeaderBar;
 import gtk.FileChooserDialog;
+import gtk.Label;
 import gtk.ListStore;
 import gtk.MainWindow;
-import gtk.Paned;
+import gtk.Notebook;
 import gtk.ScrolledWindow;
-import gtk.Stack;
-import gtk.StackSidebar;
 import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
@@ -37,10 +36,8 @@ class LogmasterWindow : MainWindow {
     LoggingBackend[] backends;
     LogViewer[Tid] logViewers;
 
+    Notebook notebook;
     HeaderBar headerBar;
-    Paned paned;
-    StackSidebar sidebar;
-    Stack logViewerStack;
 
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
@@ -58,22 +55,14 @@ class LogmasterWindow : MainWindow {
         headerBar.packStart(openLogButton);
         this.setTitlebar(headerBar);
 
-        // Paned view
-        paned = new Paned(Orientation.HORIZONTAL);
-
-        // Add the sidebar and sidebar stack
-        sidebar = new StackSidebar();
-        logViewerStack = new Stack();
-
-        sidebar.setStack(logViewerStack);
-        sidebar.setSizeRequest(Constants.sidebarDefaultWidth, -1);
-        paned.pack1(sidebar, false, false);
-        paned.pack2(logViewerStack, true, true);
+        // Create the notebook
+        this.notebook = new Notebook();
+        this.notebook.setTabPos(GtkPositionType.LEFT);
         this.addTickCallback(&this.receiveBackendEvents);
 
         // Keyboard shortcut listener
         this.addOnKeyPress(&this.onKeyPress);
-        this.add(paned);
+        this.add(notebook);
     }
 
     /*
@@ -137,8 +126,7 @@ class LogmasterWindow : MainWindow {
         auto logViewer = new LogViewer();
         logViewers[backend.tid] = logViewer;
 
-        logViewerStack.addTitled(logViewer, backend.title, backend.title);
-        sidebar.setStack(logViewerStack);
+        this.notebook.appendPage(logViewer, new Label(backend.title));
         this.showAll();
     }
 }
