@@ -121,7 +121,9 @@ class LogmasterWindow : MainWindow {
         auto logViewer = new LogViewer();
         logViewers[backend.tid] = logViewer;
 
-        this.notebook.appendPage(logViewer, new Label(backend.title));
+        auto label = new Label(backend.title);
+        label.setXalign(0.0);
+        this.notebook.appendPage(logViewer, label);
         this.showAll();
     }
 }
