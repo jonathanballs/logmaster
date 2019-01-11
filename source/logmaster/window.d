@@ -26,11 +26,6 @@ import logmaster.constants;
 import logmaster.logviewer;
 
 
-// Reminder for jonny when u get back
-// You were just in the middle of implementing threading code
-// The problem is the thread ids
-// Do it again carefully and make sure that the right ids are in the right place
-
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
     LoggingBackend[] backends;
