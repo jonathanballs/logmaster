@@ -104,6 +104,12 @@ class LogmasterWindow : MainWindow {
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {
+
+        // Don't recieve events if backends haven't been created
+        if (this.backends.length == 0) {
+            return true;
+        }
+
         while(receiveTimeout(-1.msecs,
             (shared BeventNewLogLines event) {
                 auto logViewer = this.logViewers[cast(Tid)event.tid];
