@@ -142,8 +142,10 @@ class LogmasterWindow : MainWindow {
         hbox.packStart(label, true, true, 0);
         hbox.packEnd(button, false, true, 0);
 
+        auto pageNum = this.notebook.appendPage(logViewer, hbox);
         hbox.showAll();
-        this.notebook.appendPage(logViewer, hbox);
+        logViewer.showAll();
         this.showAll();
+        this.notebook.setCurrentPage(pageNum);
     }
 }
