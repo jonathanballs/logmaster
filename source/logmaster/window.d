@@ -8,11 +8,14 @@ import gtk.Button;
 import gtk.CellRendererText;
 import gtk.HeaderBar;
 import gtk.FileChooserDialog;
+import gtk.Image;
 import gtk.Label;
 import gtk.ListStore;
+import gtk.HBox;
 import gtk.MainWindow;
 import gtk.Notebook;
 import gtk.ScrolledWindow;
+import gtk.StockItem;
 import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
@@ -127,9 +130,20 @@ class LogmasterWindow : MainWindow {
         auto logViewer = new LogViewer();
         logViewers[backend.tid] = logViewer;
 
+        // Create the label
         auto label = new Label(backend.title);
         label.setXalign(0.0);
-        this.notebook.appendPage(logViewer, label);
+        auto image = new Image(StockID.CLOSE, GtkIconSize.MENU);
+        auto button = new Button();
+        button.setRelief(GtkReliefStyle.NONE);
+        button.setImage(image);
+
+        auto hbox = new HBox(false, 5);
+        hbox.packStart(label, true, true, 0);
+        hbox.packEnd(button, false, true, 0);
+
+        hbox.showAll();
+        this.notebook.appendPage(logViewer, hbox);
         this.showAll();
     }
 }
