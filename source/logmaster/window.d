@@ -32,7 +32,7 @@ import logmaster.logviewer;
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
     LoggingBackend[] backends;
-    LogViewer[Tid] logViewers;
+    LogViewer[BackendID] logViewers;
 
     Notebook notebook;
     HeaderBar headerBar;
@@ -115,7 +115,7 @@ class LogmasterWindow : MainWindow {
 
         while(receiveTimeout(-1.msecs,
             (shared BeventNewLogLines event) {
-                auto logViewer = this.logViewers[cast(Tid)event.tid];
+                auto logViewer = this.logViewers[event.backendId];
                 TreeIter iter = logViewer.listStore.createIter();
                 logViewer.listStore.setValue(iter, 0, event.line);
             }
@@ -128,7 +128,7 @@ class LogmasterWindow : MainWindow {
         backend.start();
         this.backends ~= backend;
         auto logViewer = new LogViewer();
-        logViewers[backend.tid] = logViewer;
+        logViewers[backend.id] = logViewer;
 
         // Create the label
         auto label = new Label(backend.title);
