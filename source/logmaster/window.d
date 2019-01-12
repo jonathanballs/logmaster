@@ -75,7 +75,8 @@ class LogmasterWindow : MainWindow {
                 this.onOpenFileClicked(new Button());
                 break;
             case Keysyms.GDK_w:
-                writeln("Close window");
+                auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
+                this.closeBackend(currentPage.backendId);
                 break;
             default:
                 break;
@@ -124,17 +125,39 @@ class LogmasterWindow : MainWindow {
         return true;
     }
 
+    void closeBackend(BackendID backendId) {
+        writeln("Closing backend ", backendId);
+        // 1. End the process
+        // 2. Remove tab
+        // 3. Release associated data
+    }
+
     void addBackend(LoggingBackend backend) {
         backend.start();
         this.backends ~= backend;
-        auto logViewer = new LogViewer();
+        auto logViewer = new LogViewer(backend.id);
         logViewers[backend.id] = logViewer;
 
         // Create the label
+        class CloseButton : Button {
+            BackendID backendId;
+            LogmasterWindow window;
+            this(BackendID bId, LogmasterWindow window) {
+                super();
+                this.window = window;
+                this.backendId = bId;
+                this.addOnClicked(&this.onClick);
+            }
+
+            void onClick(Button b) {
+                this.window.closeBackend(this.backendId);
+            }
+        }
+
         auto label = new Label(backend.title);
         label.setXalign(0.0);
         auto image = new Image(StockID.CLOSE, GtkIconSize.MENU);
-        auto button = new Button();
+        auto button = new CloseButton(backend.id, this);
         button.setRelief(GtkReliefStyle.NONE);
         button.setImage(image);
 

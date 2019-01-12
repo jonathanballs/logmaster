@@ -11,16 +11,21 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 
+import logmaster.backend;
+
 class LogViewer : ScrolledWindow {
 
     // Meta
     string title;
+    BackendID backendId;
 
     // Implementation
     TreeView treeView;
     ListStore listStore;
 
-    this() {
+    this(BackendID bid) {
+        this.backendId = bid;
+
         /*
          * Create tree view and list store
          */
