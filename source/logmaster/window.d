@@ -78,6 +78,14 @@ class LogmasterWindow : MainWindow {
                 auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
                 this.closeBackend(currentPage.backendId);
                 break;
+            case Keysyms.GDK_Tab:
+                auto nextPageNumber = notebook.getCurrentPage() + 1;
+                if (nextPageNumber < notebook.getNPages()) {
+                    notebook.setCurrentPage(nextPageNumber);
+                } else {
+                    notebook.setCurrentPage(0);
+                }
+                break;
             default:
                 break;
             }
