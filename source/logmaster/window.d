@@ -134,9 +134,15 @@ class LogmasterWindow : MainWindow {
     }
 
     void closeBackend(BackendID backendId) {
-        writeln("Closing backend ", backendId);
         // 1. End the process
         // 2. Remove tab
+        foreach(i; 0..notebook.getNPages()) {
+            auto logviewer = cast(LogViewer)notebook.getNthPage(i);
+            if (logviewer.backendId == backendId) {
+                notebook.removePage(i);
+                break;
+            }
+        }
         // 3. Release associated data
     }
 
