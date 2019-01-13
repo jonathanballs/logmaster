@@ -63,7 +63,7 @@ class LogmasterWindow : MainWindow {
         this.add(notebook);
     }
 
-    /*
+    /**
      * Keyboard Shortcuts
      */
     bool onKeyPress(GdkEventKey* g, Widget w) {
@@ -102,21 +102,10 @@ class LogmasterWindow : MainWindow {
         auto res = fileDialog.run();
         if (res == ResponseType.OK) {
             auto filename = fileDialog.getFilename();
-            this.openFile(filename);
+            import logmaster.backends.file : FileBackend;
+            this.addBackend(new FileBackend(filename));
         }
         fileDialog.hide();
-    }
-
-    void openFile(string filename) {
-        import logmaster.backends.file;
-        auto backend = new FileBackend(filename);
-        this.addBackend(backend);
-    }
-
-    void openStream(File f, string streamName) {
-        import logmaster.backends.stream;
-        auto backend = new UnixStreamBackend(stdin, streamName);
-        this.addBackend(backend);
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {

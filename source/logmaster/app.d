@@ -6,6 +6,9 @@ import gtk.Main;
 import gtk.Widget;
 import logmaster.window;
 
+import logmaster.backends.file;
+import logmaster.backends.stream;
+
 void main(string[] args)
 {
     // TODO: Argument parsing
@@ -17,8 +20,8 @@ void main(string[] args)
     auto window = new LogmasterWindow();
 
     // TODO find out source of stdin
-    window.openStream(stdin, "stdin");
-    window.openFile("/var/log/pacman.log");
+    window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+    window.addBackend(new FileBackend("/var/log/pacman.log"));
 
     window.showAll();
     window.addOnDestroy(delegate void(Widget w){
