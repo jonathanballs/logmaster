@@ -75,8 +75,12 @@ class LogmasterWindow : MainWindow {
                 this.onOpenFileClicked(new Button());
                 break;
             case Keysyms.GDK_w:
-                auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
-                this.closeBackend(currentPage.backendId);
+                if (notebook.getNPages() == 0) {
+                    writeln("Exit the program");
+                } else {
+                    auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
+                    this.closeBackend(currentPage.backendId);
+                }
                 break;
             case Keysyms.GDK_Tab:
                 auto nextPageNumber = notebook.getCurrentPage() + 1;
@@ -134,7 +138,12 @@ class LogmasterWindow : MainWindow {
     }
 
     void closeBackend(BackendID backendId) {
-        // 1. End the process
+        // 1. Remove from tab list
+        auto backend = backends[backendId];
+        import std.algorithm : filter;
+        import std.array : array;
+        backends = backends.filter!(b => b.id != backendId).array();
+
         // 2. Remove tab
         foreach(i; 0..notebook.getNPages()) {
             auto logviewer = cast(LogViewer)notebook.getNthPage(i);
@@ -143,7 +152,9 @@ class LogmasterWindow : MainWindow {
                 break;
             }
         }
-        // 3. Release associated data
+        logViewers.remove(backendId);
+
+        // 3. End background process
     }
 
     void addBackend(LoggingBackend backend) {
