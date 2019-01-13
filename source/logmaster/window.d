@@ -31,7 +31,7 @@ import logmaster.logviewer;
 
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
-    LoggingBackend[] backends;
+    LoggingBackend[BackendID] backends;
     LogViewer[BackendID] logViewers;
 
     Notebook notebook;
@@ -121,7 +121,7 @@ class LogmasterWindow : MainWindow {
 
     bool receiveBackendEvents(Widget w, FrameClock f) {
 
-        // Don't recieve events if backends haven't been created
+        // Don't receive events if backends haven't been created
         if (this.backends.length == 0) {
             return true;
         }
@@ -140,9 +140,7 @@ class LogmasterWindow : MainWindow {
     void closeBackend(BackendID backendId) {
         // 1. Remove from tab list
         auto backend = backends[backendId];
-        import std.algorithm : filter;
-        import std.array : array;
-        backends = backends.filter!(b => b.id != backendId).array();
+        backends.remove(backendId);
 
         // 2. Remove tab
         foreach(i; 0..notebook.getNPages()) {
@@ -155,11 +153,12 @@ class LogmasterWindow : MainWindow {
         logViewers.remove(backendId);
 
         // 3. End background process
+        backend.tid.send(BeventExitThread());
     }
 
     void addBackend(LoggingBackend backend) {
         backend.start();
-        this.backends ~= backend;
+        this.backends[backend.id] = backend;
         auto logViewer = new LogViewer(backend.id);
         logViewers[backend.id] = logViewer;
 

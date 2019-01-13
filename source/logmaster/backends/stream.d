@@ -12,6 +12,7 @@ import std.concurrency;
 
 import core.stdc.stdlib;
 import core.sys.posix.fcntl;
+import core.sys.posix.poll;
 
 import logmaster.backend;
 
@@ -43,10 +44,34 @@ class UnixStreamBackend : LoggingBackend {
         // char* name = ptsname(f);
         // writeln("PTS slave is " ~ to!string(name));
 
-        while (!stdin.eof) {
-            string line = this.stream.readln().chomp();
-            this.newLogLineCallback(line);
+        bool shouldExit = false;
+
+        while (!stdin.eof && !shouldExit) {
+            pollfd fds;
+            fds.fd = this.stream.fileno;
+            fds.events = POLLIN;
+            auto res = poll(&fds, 1, 35);
+
+            if (res > 0) {
+                // TODO: what if there is data on the stream but not readable?
+                string line = this.stream.readln().chomp();
+                this.newLogLineCallback(line);
+            } else if (res < 0) {
+                import core.sys.linux.errno;
+                if (errno == EINTR) {
+                    continue;
+                } else {
+                    writeln("throwing exception");
+                    throw new Exception("Error while polling stream " ~ to!string(errno));
+                }
+            }
+
+            import core.time : msecs;
+            receiveTimeout(-1.msecs,
+                (BeventExitThread e) {
+                    shouldExit = true;
+                }
+            );
         }
     }
 }
-

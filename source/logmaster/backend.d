@@ -18,6 +18,10 @@ struct BeventNewLogLines {
     }
 }
 
+/// Tell thread to exit
+shared struct BeventExitThread {
+}
+
 abstract class LoggingBackend {
     BackendID id;
     Tid tid;
