@@ -26,12 +26,14 @@ abstract class LoggingBackend {
     BackendID id;
     Tid tid;
 
-    string title;
+    string shortTitle;
+    string longTitle;
     abstract void readLines();
 
-    this(string _title) {
+    this(string _shortTitle, string _longTitle) {
         this.id = newId++;
-        this.title = _title;
+        this.shortTitle = _shortTitle;
+        this.longTitle = _longTitle;
     }
 
     void start() {

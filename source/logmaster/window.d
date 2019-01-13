@@ -185,7 +185,7 @@ class LogmasterWindow : MainWindow {
             }
         }
 
-        auto label = new Label(backend.title);
+        auto label = new Label(backend.shortTitle);
         label.setXalign(0.0);
         auto image = new Image(StockID.CLOSE, GtkIconSize.MENU);
         auto button = new CloseButton(backend.id, this);

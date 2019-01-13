@@ -5,13 +5,14 @@ import std.file;
 import std.string;
 import std.array;
 import std.concurrency;
+import std.path : baseName;
 import logmaster.backend;
 
 class FileBackend : LoggingBackend {
     string fileContents;
 
     this(string filename) {
-        super(filename);
+        super(baseName(filename),filename);
         fileContents = readText(filename);
     }
 

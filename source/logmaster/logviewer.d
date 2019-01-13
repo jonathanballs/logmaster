@@ -16,7 +16,7 @@ import logmaster.backend;
 class LogViewer : ScrolledWindow {
 
     // Meta
-    string title;
+    string shortTitle;
     BackendID backendId;
 
     // Implementation
