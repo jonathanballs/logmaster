@@ -68,20 +68,23 @@ class LogmasterWindow : MainWindow {
      */
     bool onKeyPress(GdkEventKey* g, Widget w) {
 
-        // If control key pressed
+        // If CTRL key pressed
         if (g.state & ModifierType.CONTROL_MASK) {
             switch(g.keyval) {
+            // Open file dialog
             case Keysyms.GDK_o:
                 this.onOpenFileClicked(new Button());
                 break;
+            // Close current tab/window
             case Keysyms.GDK_w:
                 if (notebook.getNPages() == 0) {
                     writeln("Exit the program");
                 } else {
                     auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
-                    this.closeBackend(currentPage.backendId);
+                    this.removeBackend(currentPage.backendId);
                 }
                 break;
+            // Cycle tabs
             case Keysyms.GDK_Tab:
                 auto nextPageNumber = notebook.getCurrentPage() + 1;
                 if (nextPageNumber < notebook.getNPages()) {
@@ -97,7 +100,10 @@ class LogmasterWindow : MainWindow {
         return true;
     }
 
-    void onOpenFileClicked(Button b) {
+    /**
+     * Callback for opening files
+     */
+    private void onOpenFileClicked(Button b) {
         auto fileDialog = new FileChooserDialog("Open Log", this, FileChooserAction.OPEN);
         auto res = fileDialog.run();
         if (res == ResponseType.OK) {
@@ -126,7 +132,16 @@ class LogmasterWindow : MainWindow {
         return true;
     }
 
-    void closeBackend(BackendID backendId) {
+    /**
+     * Unregister a backend. This stops the backend thread, closes any open tabs
+     * associated with it and removes it from any internal data structures.
+     */
+    void removeBackend(LoggingBackend backend) {
+        this.removeBackend(backend.id);
+    }
+
+    /// ditto
+    void removeBackend(BackendID backendId) {
         // 1. Remove from tab list
         auto backend = backends[backendId];
         backends.remove(backendId);
@@ -145,6 +160,9 @@ class LogmasterWindow : MainWindow {
         backend.tid.send(BeventExitThread());
     }
 
+    /**
+     * Register a new backend. This starts the backend thread;
+     */
     void addBackend(LoggingBackend backend) {
         backend.start();
         this.backends[backend.id] = backend;
@@ -163,7 +181,7 @@ class LogmasterWindow : MainWindow {
             }
 
             void onClick(Button b) {
-                this.window.closeBackend(this.backendId);
+                this.window.removeBackend(this.backendId);
             }
         }
 
