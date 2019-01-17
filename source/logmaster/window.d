@@ -58,6 +58,8 @@ class LogmasterWindow : MainWindow {
         this.notebook = new Notebook();
         this.notebook.setTabPos(GtkPositionType.LEFT);
         this.notebook.addOnSwitchPage(&this.onChangeLogviewer);
+
+        // Handle backend events every tick
         this.addTickCallback(&this.receiveBackendEvents);
 
         // Keyboard shortcut listener

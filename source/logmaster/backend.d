@@ -18,7 +18,7 @@ struct BeventNewLogLines {
     }
 }
 
-/// Tell thread to exit
+/// Tell backend thread to exit
 shared struct BeventExitThread {
 }
 
