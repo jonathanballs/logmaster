@@ -105,6 +105,15 @@ class LogmasterWindow : MainWindow {
                     notebook.setCurrentPage(0);
                 }
                 break;
+            // Cycle tabs backwards. Not sure why have to handle it like this...
+            case Keysyms.GDK_ISO_Left_Tab:
+                int prevPageNumber = notebook.getCurrentPage() - 1;
+                if (prevPageNumber < 0 ) {
+                    notebook.setCurrentPage(notebook.getNPages() - 1);
+                } else {
+                    notebook.setCurrentPage(prevPageNumber);
+                }
+                break;
             default:
                 break;
             }
