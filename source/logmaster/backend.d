@@ -22,19 +22,35 @@ struct BeventNewLogLines {
 shared struct BeventExitThread {
 }
 
-abstract class LoggingBackend {
-    BackendID id;
+/// Backend threw an exception
+struct BeventException {
     Tid tid;
+    BackendID backendId;
+    Exception e;
 
-    string shortTitle;
-    string longTitle;
+    this(BackendID backendId, Exception e) {
+        this.backendId = backendId;
+        this.e = e;
+    }
+}
+
+abstract class LoggingBackend {
+    BackendID id;      /// BackendID of the backend.
+    Tid tid;           /// Tid of the backend thread.
+    string shortTitle; /// Short title for the sidebar
+    string longTitle;  /// Longer title for the headerbar subtitle
+
+    /**
+     * Abstract method for subclasses to override. Start reading lines from the
+     * log source and send them back to the main thread.
+     */
     abstract void readLines();
 
     /**
      * Create a new logging backend.
      * Params:
      *     _shortTitle = A shorter title for the sidebar.
-     *     _longTitle  = A longer title for the titlebar.
+     *     _longTitle  = A longer title for the headerbar subtitle.
      */
     this(string _shortTitle, string _longTitle) {
         this.id = newId++;
@@ -42,12 +58,24 @@ abstract class LoggingBackend {
         this.longTitle = _longTitle;
     }
 
+    /**
+     * Spawn the logging backend as a new thread and start reading lines.
+     */
     void start() {
         this.tid = spawn((shared LoggingBackend self) {
-            (cast(LoggingBackend) self).readLines();
+            try {
+                (cast(LoggingBackend) self).readLines();
+            } catch (Exception e) {
+                ownerTid.send(cast(shared) BeventException(self.id, e));
+            }
         }, cast(shared) this);
     }
 
+    /**
+     * Callback for when a new log line is read
+     * Params:
+     *      line = a line of chomped log output.
+     */
     void newLogLineCallback(string line) {
         ownerTid.send(cast(shared) BeventNewLogLines(this.id, line));
     }

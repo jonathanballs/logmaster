@@ -9,14 +9,15 @@ import std.path : baseName;
 import logmaster.backend;
 
 class FileBackend : LoggingBackend {
-    string fileContents;
+    string filename;
 
     this(string filename) {
-        super(baseName(filename),filename);
-        fileContents = readText(filename);
+        super(baseName(filename), filename);
+        this.filename = filename;
     }
 
     override void readLines() {
+        string fileContents = readText(this.filename);
         foreach (line; fileContents.split('\n')) {
             this.newLogLineCallback(line);
         }

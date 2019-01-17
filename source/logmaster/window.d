@@ -1,6 +1,7 @@
 module logmaster.window;
 
 import std.concurrency;
+import std.format;
 import std.stdio;
 import core.thread;
 
@@ -135,6 +136,23 @@ class LogmasterWindow : MainWindow {
                 auto logViewer = this.logViewers[event.backendId];
                 TreeIter iter = logViewer.listStore.createIter();
                 logViewer.listStore.setValue(iter, 0, event.line);
+            },
+            (shared BeventException event) {
+                auto logViewer = this.logViewers[event.backendId];
+                writeln(cast(Exception)event.e);
+
+                import gtk.MessageDialog;
+                auto dialog = new MessageDialog(this,
+                    GtkDialogFlags.DESTROY_WITH_PARENT,
+                    GtkMessageType.ERROR,
+                    GtkButtonsType.OK,
+                    format!("An Exception occured on backend thread %d (%s). A "
+                        ~ "stack trace is available in the console and the logs.")
+                        (event.backendId, backends[event.backendId].longTitle)
+                    );
+                dialog.run();
+                dialog.destroy();
+                removeBackend(event.backendId);
             }
         )) {}
 
