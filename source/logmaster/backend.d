@@ -30,6 +30,12 @@ abstract class LoggingBackend {
     string longTitle;
     abstract void readLines();
 
+    /**
+     * Create a new logging backend.
+     * Params:
+     *     _shortTitle = A shorter title for the sidebar.
+     *     _longTitle  = A longer title for the titlebar.
+     */
     this(string _shortTitle, string _longTitle) {
         this.id = newId++;
         this.shortTitle = _shortTitle;

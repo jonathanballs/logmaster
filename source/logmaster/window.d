@@ -56,11 +56,20 @@ class LogmasterWindow : MainWindow {
         // Create the notebook
         this.notebook = new Notebook();
         this.notebook.setTabPos(GtkPositionType.LEFT);
+        this.notebook.addOnSwitchPage(&this.onChangeLogviewer);
         this.addTickCallback(&this.receiveBackendEvents);
 
         // Keyboard shortcut listener
         this.addOnKeyPress(&this.onKeyPress);
         this.add(notebook);
+    }
+
+    /**
+     * Set the long title as a subtitle when opening a backend
+     */
+    void onChangeLogviewer(Widget w, uint pageNum, Notebook n) {
+        auto backendId = (cast(LogViewer)notebook.getNthPage(pageNum)).backendId;
+        this.headerBar.setSubtitle(backends[backendId].longTitle);
     }
 
     /**
