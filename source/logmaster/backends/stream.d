@@ -29,8 +29,11 @@ void checkErr(int errNum) {
 class UnixStreamBackend : LoggingBackend {
     File stream;
 
-    this(File stdStream, string _shortTitle = "unix stream") {
-        super(_shortTitle, _shortTitle);
+    this(File stdStream, string _shortTitle = "unix stream", string _longTitle = "") {
+        if (longTitle == "") {
+            _longTitle = _shortTitle;
+        }
+        super(_shortTitle, _longTitle);
         this.stream = stdStream;
     }
 

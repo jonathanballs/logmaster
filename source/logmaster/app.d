@@ -1,7 +1,11 @@
-import std.algorithm : findSplit, canFind, filter;
+import std.array : split;
+import std.algorithm;
+import std.conv;
 import std.format;
 import std.getopt;
 import std.range;
+import std.regex;
+import std.string;
 import std.stdio;
 
 import gtk.Main;
@@ -32,10 +36,9 @@ int main(string[] args)
     foreach (filename; opts.files) {
         // Check if filename is actually stdin
         if (filename == "-") {
-            import core.thread : getpid;
-            import std.file : readLink;
-            writeln(readLink(format!"/proc/%d/fd/0"(getpid())));
-            window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+            auto stdinName = getStdinName();
+            auto stdinShortName = stdinName.split(' ')[0];
+            window.addBackend(new UnixStreamBackend(stdin, stdinShortName, stdinName));
         } else {
             window.addBackend(new FileBackend(filename));
         }
@@ -49,7 +52,9 @@ int main(string[] args)
 
     // Open these automatically during development just to be quick
     debug {
-        window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+        if (!opts.files.canFind(["-"])) {
+            window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+        }
         window.addBackend(new FileBackend("/var/log/pacman.log"));
     }
 
@@ -112,4 +117,41 @@ LogmasterOpts parseArgs(string[] args) {
     }
 
     return opts;
+}
+
+/**
+ * Uses procfs in order to find what program/file stdin is coming from.
+ */
+string getStdinName() {
+    version(linux) {
+        import core.thread : getpid;
+        import std.file : readLink, dirEntries, SpanMode;
+        auto linkName = readLink(format!"/proc/%d/fd/0"(getpid()));
+        if (linkName.startsWith("pipe")) {
+            foreach (string pidPath; dirEntries("/proc/", SpanMode.shallow)) {
+                try {
+                    string stdoutLink = readLink(pidPath ~ "/fd/1");
+                    if(stdoutLink == linkName) {
+                        import std.file : read;
+                        auto cmd = (cast(const(ubyte)[]) read(pidPath ~ "/cmdline"))
+                            .split(0)
+                            .map!(a => a.assumeUTF());
+
+                        if (cmd.length > 2 && cmd[0] == "tclsh" && cmd[1] == "/usr/bin/unbuffer") {
+                            cmd = cmd[2..$];
+                        }
+
+                        return cmd
+                            .joiner(" ")
+                            .to!string;
+                    }
+                } catch (Exception e) {
+                    // Ignore if can't access etc.
+                }
+            }
+        }
+        return "stdin";
+    } else {
+        return "stdin";
+    }
 }
