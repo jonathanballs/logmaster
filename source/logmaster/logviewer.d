@@ -12,6 +12,7 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 
 import logmaster.backend;
+import logmaster.lazylistview;
 
 class LogViewer : ScrolledWindow {
 
@@ -55,6 +56,8 @@ class LogViewer : ScrolledWindow {
         // TreeIter iter = this.listStore.createIter();
         // this.listStore.setValue(iter, 0, "No logs yet");
 
-        this.add(treeView);
+
+        // this.add(treeView);
+        this.add(new LazyListView());
     }
 }
