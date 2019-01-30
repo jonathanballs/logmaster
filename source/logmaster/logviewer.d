@@ -4,7 +4,6 @@ import std.concurrency;
 import core.thread;
 import gdk.FrameClock;
 import gtk.CellRendererText;
-import gtk.ListStore;
 import gtk.ScrolledWindow;
 import gtk.TreeIter;
 import gtk.TreeView;
@@ -12,7 +11,7 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 
 import logmaster.backend;
-import logmaster.lazylistview;
+import logmaster.lazytreeiter;
 
 class LogViewer : ScrolledWindow {
 
@@ -22,7 +21,7 @@ class LogViewer : ScrolledWindow {
 
     // Implementation
     TreeView treeView;
-    ListStore listStore;
+    LazyTreeIter iter;
 
     this(BackendID bid) {
         this.backendId = bid;
@@ -32,32 +31,31 @@ class LogViewer : ScrolledWindow {
          */
         this.treeView = new TreeView();
         this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
-        this.listStore = new ListStore([GType.STRING]);
-        treeView.setModel(listStore);
 
-        /*
-         * Text rendering
-         */
-        auto cellRendererText = new CellRendererText();
-        cellRendererText.setProperty("family", "Monospace");
-        cellRendererText.setProperty("size-points", 10);
+        this.iter = new LazyTreeIter();
 
-        /*
-         * Add Column to tree view for messages
-         */
-        auto column = new TreeViewColumn("message", cellRendererText, "text", 0);
-        column.setResizable(true);
-        column.setMinWidth(200);
-        this.treeView.appendColumn(column);
+        treeView.setModel(this.iter);
+
+        TreeViewColumn col;
+        CellRendererText renderer;
+        col = new TreeViewColumn();
+		renderer  = new CellRendererText();
+		col.packStart(renderer, true);
+		col.addAttribute(renderer, "text", CustomListColumn.Name);
+		col.setTitle("Name");
+		treeView.appendColumn(col);
+
+		col = new TreeViewColumn();
+		renderer  = new CellRendererText();
+		col.packStart(renderer, true);
+		col.addAttribute(renderer, "text", CustomListColumn.YearBorn);
+		col.setTitle("Year Born");
+		treeView.appendColumn(col);
 
         /*
          * Set default message saying that there aren't any logs yet
          */
-        // TreeIter iter = this.listStore.createIter();
-        // this.listStore.setValue(iter, 0, "No logs yet");
 
-
-        // this.add(treeView);
-        this.add(new LazyListView());
+        this.add(treeView);
     }
 }

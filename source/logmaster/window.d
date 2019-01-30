@@ -145,8 +145,8 @@ class LogmasterWindow : MainWindow {
         while(receiveTimeout(-1.msecs,
             (shared BeventNewLogLines event) {
                 auto logViewer = this.logViewers[event.backendId];
-                TreeIter iter = logViewer.listStore.createIter();
-                logViewer.listStore.setValue(iter, 0, event.line);
+                // TreeIter iter = logViewer.listStore.createIter();
+                // logViewer.listStore.setValue(iter, 0, event.line);
             },
             (shared BeventException event) {
                 auto logViewer = this.logViewers[event.backendId];
