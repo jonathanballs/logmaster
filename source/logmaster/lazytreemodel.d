@@ -20,7 +20,7 @@ struct CustomRecord
   uint yearBorn;
 
   /* admin stuff used by the custom list model */
-  uint pos;   /* pos within the array */
+  uint lineID;   /* Id of this line */
 }
 
 enum CustomListColumn
@@ -45,7 +45,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
         super(getType(), null);
 
         columns = [
-            Column("pos", GType.POINTER),
+            Column("lineID", GType.UINT),
             Column("name", GType.STRING),
             Column("Year Born", GType.UINT)];
 
@@ -118,7 +118,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
 
         /* We simply store a pointer to our custom record in the iter */
         iter.stamp     = stamp;
-        iter.userData  = record;
+        iter.setUserData(record.lineID);
 
         return true;
     }
@@ -136,9 +136,9 @@ class LazyTreeModel : ObjectG, TreeModelIF
         if ( iter is null || iter.userData is null || iter.stamp != stamp )
             return null;
 
-        record = cast(CustomRecord*) iter.userData;
+        record = rows[iter.getUserData!(uint)];
 
-        path = new TreePath(record.pos);
+        path = new TreePath(record.lineID);
 
         return path;
     }
@@ -161,9 +161,9 @@ class LazyTreeModel : ObjectG, TreeModelIF
 
         value.init(columns[column].type);
 
-        record = cast(CustomRecord*) iter.userData;
+        record = rows[iter.getUserData!(uint)];
 
-        if ( record is null || record.pos >= rows.length )
+        if ( record is null || record.lineID >= rows.length )
             return null;
 
         import std.stdio;
@@ -179,7 +179,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
                 break;
 
             case CustomListColumn.YearBorn:
-                value.setUint(record.yearBorn);
+                value.setUint(record.yearBorn + record.lineID);
                 break;
 
             default:
@@ -200,19 +200,19 @@ class LazyTreeModel : ObjectG, TreeModelIF
         if ( iter is null || iter.userData is null || iter.stamp != stamp )
             return false;
 
-        record = cast(CustomRecord*) iter.userData;
+        record = rows[iter.getUserData!(uint)];
 
         /* Is this the last record in the list? */
-        if ( (record.pos + 1) >= rows.length )
+        if ( (record.lineID + 1) >= rows.length )
             return false;
 
-        nextrecord = rows[(record.pos + 1)];
+        nextrecord = rows[(record.lineID + 1)];
 
-        if ( nextrecord is null || nextrecord.pos != record.pos + 1 )
+        if ( nextrecord is null || nextrecord.lineID != record.lineID + 1 )
             throw new Exception("Invalid next record");
 
         iter.stamp     = stamp;
-        iter.userData  = nextrecord;
+        iter.setUserData(nextrecord.lineID);
 
         return true;
     }
@@ -238,7 +238,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
         /* Set iter to first item in list */
         iter = new TreeIter();
         iter.stamp     = stamp;
-        iter.userData  = rows[0];
+        iter.setUserData(rows[0].lineID);
 
         return true;
     }
@@ -291,7 +291,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
 
         iter = new TreeIter();
         iter.stamp     = stamp;
-        iter.userData  = record;
+        iter.setUserData(record.lineID);
 
         return true;
     }
@@ -317,13 +317,13 @@ class LazyTreeModel : ObjectG, TreeModelIF
         TreeIter      iter;
         TreePath      path;
         CustomRecord* newrecord;
-        uint          pos;
+        uint          lineID;
 
         newrecord = new CustomRecord;
 
         newrecord.name = name;
         newrecord.yearBorn = yearBorn;
-        newrecord.pos = cast(uint) rows.length;
+        newrecord.lineID = cast(uint) rows.length;
 
         rows ~= newrecord;
 
@@ -331,7 +331,7 @@ class LazyTreeModel : ObjectG, TreeModelIF
          *  references) that we have inserted a new row, and where it was
          *  inserted */
 
-        path = new TreePath(newrecord.pos);
+        path = new TreePath(newrecord.lineID);
 
         iter = new TreeIter();
         getIter(iter, path);
