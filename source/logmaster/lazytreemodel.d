@@ -1,4 +1,4 @@
-module logmaster.lazytreeiter;
+module logmaster.lazytreemodel;
 
 import std.typecons;
 
@@ -31,13 +31,11 @@ enum CustomListColumn
     NColumns,
 }
 
-class LazyTreeIter : ObjectG, TreeModelIF
+class LazyTreeModel : ObjectG, TreeModelIF
 {
     Column[] columns;
-    int nColumns;
-    int stamp;
-    GType[3] columnTypes;
     CustomRecord*[] rows;
+    int stamp;
 
     mixin ImplementInterface!(GObject, GtkTreeModelIface);
     mixin TreeModelT!(GtkTreeModel);
@@ -47,17 +45,9 @@ class LazyTreeIter : ObjectG, TreeModelIF
         super(getType(), null);
 
         columns = [
-            Column()
+            Column("pos", GType.POINTER),
             Column("name", GType.STRING),
             Column("Year Born", GType.UINT)];
-
-        import std.stdio;
-        // writeln(columns[0][0]);
-
-        nColumns = columnTypes.length;
-        columnTypes[0] = GType.POINTER;
-        columnTypes[1] = GType.STRING;
-        columnTypes[2] = GType.UINT;
 
         stamp = RandG.randomInt();
 
@@ -67,11 +57,10 @@ class LazyTreeIter : ObjectG, TreeModelIF
     }
 
     /*
-     * tells the rest of the world whether our tree model
-     * has any special characteristics. In our case,
-     * we have a list model (instead of a tree), and each
-     * tree iter is valid as long as the row in question
-     * exists, as it only contains a pointer to our struct.
+     * tells the rest of the world whether our tree model has any special
+     * characteristics. In our case, we have a list model (instead of a tree),
+     * and each tree iter is valid as long as the row in question exists, as it
+     * only contains a pointer to our struct.
      */
     override GtkTreeModelFlags getFlags()
     {
@@ -80,33 +69,32 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * tells the rest of the world how many data
-     * columns we export via the tree model interface
+     * tells the rest of the world how many data columns we export via the tree
+     * model interface
      */
 
     override int getNColumns()
     {
-        return nColumns;
+        return cast(int) columns.length;
     }
 
     /*
-     * tells the rest of the world which type of
-     * data an exported model column contains
+     * tells the rest of the world which type of data an exported model column
+     * contains
      */
     override GType getColumnType(int index)
     {
-        if ( index >= nColumns || index < 0 )
+        if ( index >= columns.length || index < 0 )
             return GType.INVALID;
 
-        return columnTypes[index];
+        return columns[index].type;
     }
 
     /*
-     * converts a tree path (physical position) into a
-     * tree iter structure (the content of the iter
-     * fields will only be used internally by our model).
-     * We simply store a pointer to our CustomRecord
-     * structure that represents that row in the tree iter.
+     * converts a tree path (physical position) into a tree iter structure (the
+     * content of the iter fields will only be used internally by our model). We
+     * simply store a pointer to our CustomRecord structure that represents that
+     * row in the tree iter.
      */
     override int getIter(TreeIter iter, TreePath path)
     {
@@ -128,11 +116,6 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
         record = rows[n];
 
-        if ( record is null )
-            throw new Exception("Not Exsisting record requested");
-        if ( record.pos != n )
-            throw new Exception("record.pos != TreePath.getIndices()[0]");
-
         /* We simply store a pointer to our custom record in the iter */
         iter.stamp     = stamp;
         iter.userData  = record;
@@ -142,8 +125,8 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * converts a tree iter into a tree path (ie. the
-     * physical position of that row in the list).
+     * converts a tree iter into a tree path (ie. the physical position of that
+     * row in the list).
      */
     override TreePath getPath(TreeIter iter)
     {
@@ -162,8 +145,8 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Returns a row's exported data columns
-     * (_get_value is what gtk_tree_model_get uses)
+     * Returns a row's exported data columns (_get_value is what
+     * gtk_tree_model_get uses)
      */
 
     override Value getValue(TreeIter iter, int column, Value value = null)
@@ -173,10 +156,10 @@ class LazyTreeIter : ObjectG, TreeModelIF
         if ( value is null )
             value = new Value();
 
-        if ( iter is null || column >= nColumns || iter.stamp != stamp )
+        if ( iter is null || column >= columns.length || iter.stamp != stamp )
             return null;
 
-        value.init(columnTypes[column]);
+        value.init(columns[column].type);
 
         record = cast(CustomRecord*) iter.userData;
 
@@ -208,8 +191,7 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Takes an iter structure and sets it to point
-     * to the next row.
+     * Takes an iter structure and sets it to point to the next row.
      */
     override bool iterNext(TreeIter iter)
     {
@@ -237,11 +219,9 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Returns TRUE or FALSE depending on whether
-     * the row specified by 'parent' has any children.
-     * If it has children, then 'iter' is set to
-     * point to the first child. Special case: if
-     * 'parent' is NULL, then the first top-level
+     * Returns TRUE or FALSE depending on whether the row specified by 'parent'
+     * has any children. If it has children, then 'iter' is set to point to the
+     * first child. Special case: if 'parent' is NULL, then the first top-level
      * row should be returned if it exists.
      */
 
@@ -265,9 +245,8 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Returns TRUE or FALSE depending on whether
-     * the row specified by 'iter' has any children.
-     * We only have a list and thus no children.
+     * Returns TRUE or FALSE depending on whether the row specified by 'iter'
+     * has any children. We only have a list and thus no children.
      */
     override bool iterHasChild(TreeIter iter)
     {
@@ -276,13 +255,10 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Returns the number of children the row
-     * specified by 'iter' has. This is usually 0,
-     * as we only have a list and thus do not have
-     * any children to any rows. A special case is
-     * when 'iter' is NULL, in which case we need
-     * to return the number of top-level nodes,
-     * ie. the number of rows in our list.
+     * Returns the number of children the row specified by 'iter' has. This is
+     * usually 0, as we only have a list and thus do not have any children to
+     * any rows. A special case is when 'iter' is NULL, in which case we need to
+     * return the number of top-level nodes, ie. the number of rows in our list.
      */
     override int iterNChildren(TreeIter iter)
     {
@@ -295,11 +271,9 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * If the row specified by 'parent' has any
-     * children, set 'iter' to the n-th child and
-     * return TRUE if it exists, otherwise FALSE.
-     * A special case is when 'parent' is NULL, in
-     * which case we need to set 'iter' to the n-th
+     * If the row specified by 'parent' has any children, set 'iter' to the n-th
+     * child and return TRUE if it exists, otherwise FALSE. A special case is
+     * when 'parent' is NULL, in which case we need to set 'iter' to the n-th
      * row if it exists.
      */
     override bool iterNthChild(out TreeIter iter, TreeIter parent, int n)
@@ -324,9 +298,8 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
 
     /*
-     * Point 'iter' to the parent node of 'child'. As
-     * we have a list and thus no children and no
-     * parents of children, we can just return FALSE.
+     * Point 'iter' to the parent node of 'child'. As we have a list and thus no
+     * children and no parents of children, we can just return FALSE.
      */
     override bool iterParent(out TreeIter iter, TreeIter child)
     {
@@ -334,12 +307,10 @@ class LazyTreeIter : ObjectG, TreeModelIF
     }
 
     /*
-     * Empty lists are boring. This function can
-     * be used in your own code to add rows to the
-     * list. Note how we emit the "row-inserted"
-     * signal after we have appended the row
-     * internally, so the tree view and other
-     * interested objects know about the new row.
+     * Empty lists are boring. This function can be used in your own code to add
+     * rows to the list. Note how we emit the "row-inserted" signal after we
+     * have appended the row internally, so the tree view and other interested
+     * objects know about the new row.
      */
     void appendRecord(string name, uint yearBorn)
     {
@@ -356,9 +327,9 @@ class LazyTreeIter : ObjectG, TreeModelIF
 
         rows ~= newrecord;
 
-        /* inform the tree view and other interested objects
-         *  (e.g. tree row references) that we have inserted
-         *  a new row, and where it was inserted */
+        /* inform the tree view and other interested objects (e.g. tree row
+         *  references) that we have inserted a new row, and where it was
+         *  inserted */
 
         path = new TreePath(newrecord.pos);
 

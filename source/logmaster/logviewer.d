@@ -11,7 +11,7 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 
 import logmaster.backend;
-import logmaster.lazytreeiter;
+import logmaster.lazytreemodel;
 
 class LogViewer : ScrolledWindow {
 
@@ -21,7 +21,7 @@ class LogViewer : ScrolledWindow {
 
     // Implementation
     TreeView treeView;
-    LazyTreeIter iter;
+    LazyTreeModel model;
 
     this(BackendID bid) {
         this.backendId = bid;
@@ -32,9 +32,9 @@ class LogViewer : ScrolledWindow {
         this.treeView = new TreeView();
         this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
 
-        this.iter = new LazyTreeIter();
+        this.model = new LazyTreeModel();
 
-        treeView.setModel(this.iter);
+        treeView.setModel(this.model);
 
         TreeViewColumn col;
         CellRendererText renderer;
