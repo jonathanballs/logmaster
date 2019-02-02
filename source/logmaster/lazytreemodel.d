@@ -27,8 +27,7 @@ enum CustomListColumn
 {
     Record = 0,
     Name,
-    YearBorn,
-    NColumns,
+    YearBorn
 }
 
 class LazyTreeModel : ObjectG, TreeModelIF
@@ -98,23 +97,19 @@ class LazyTreeModel : ObjectG, TreeModelIF
      */
     override int getIter(TreeIter iter, TreePath path)
     {
-        CustomRecord* record;
-        int[]         indices;
-        int           n, depth;
-
-        indices = path.getIndices();
-        depth   = path.getDepth();
+        auto indices = path.getIndices();
+        auto depth   = path.getDepth();
 
         /* we do not allow children */
         if (depth != 1)
             return false;//throw new Exception("We only except lists");
 
-        n = indices[0]; /* the n-th top level row */
+        auto n = indices[0]; /* the n-th top level row */
 
         if ( n >= rows.length || n < 0 )
             return false;
 
-        record = rows[n];
+        auto record = rows[n];
 
         /* We simply store a pointer to our custom record in the iter */
         iter.stamp     = stamp;
@@ -165,8 +160,6 @@ class LazyTreeModel : ObjectG, TreeModelIF
 
         if ( record is null || record.lineID >= rows.length )
             return null;
-
-        import std.stdio;
 
         switch(column)
         {

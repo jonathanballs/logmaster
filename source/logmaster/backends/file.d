@@ -1,39 +1,123 @@
-module logmaster.backends.file;
-
+import std.algorithm;
+import std.conv;
+import std.concurrency;
+import std.datetime.stopwatch;
 import std.stdio;
 import std.file;
+import std.range;
 import std.string;
-import std.array;
-import std.concurrency;
-import std.path : baseName;
-import logmaster.backend;
 
-class FileBackend : LoggingBackend {
+import core.time;
+
+import loginterface;
+
+enum IndexesSize = 4000;
+
+struct IndexingProgress {
+    /// Float between 0 and 100
+    float progressPercentage;
+    ulong[IndexesSize] newIndexes;
+
+    bool isFinished;
+}
+
+class FileLog : LogInterface {
+
     string filename;
-
-    this(string filename) {
-        super(baseName(filename), filename);
-        this.filename = filename;
+    File f;
+    /**
+     * Create a new instance of a File Log.
+     * Params:
+     *      filePath = Path of the file to open
+     */
+    this(string filePath) {
+        filename = filePath;
     }
 
-    override void readLines() {
-        string fileContents = readText(this.filename);
-        foreach (line; fileContents.split('\n')) {
-            this.newLogLineCallback(line);
-        }
+    __gshared ulong[] lineOffsets;
 
-        while(true) {
-            bool shouldExit = false;
-            import core.time: msecs;
-            receiveTimeout(35.msecs,
-                (BeventExitThread e) {
-                    shouldExit = true;
-                },
-            );
+    static void indexingThread(string filename) {
+        StopWatch s;
+        s.start();
+        ulong bufNum;
+        File f = File(filename);
 
-            if (shouldExit) {
-                return;
+        lineOffsets = [0];
+        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
+
+            auto offset = (bufNum*BUFSIZ); // Index after the nl char
+
+            if ((bufNum % 1000) == 0) {
+                this.indexingPercentage = (100 * cast(float)offset) / f.size();
             }
+
+            foreach (j, b; buf) {
+                if (b == '\n') {
+                    lineOffsets ~= offset + j + 1;
+                }
+            }
+            bufNum++;
         }
+
+        this.indexingPercentage = 100.0;
+        s.stop();
+        writeln(s.peek.total!"seconds");
+
+        // Send message to main thread
+        writeln("Finished");
     }
+	
+	// InputRange!string opSlice(long i, long j) {
+	// 	return [];
+	// }
+
+    override bool isIndexed() {
+        return this.indexingPercentage == 100.0;
+    }
+
+    void receiveEvents() {
+        while(receiveTimeout(-1.msecs,
+        (Variant v) {
+            writeln(v);
+        })) {}
+    }
+	
+	override ulong opDollar() {
+		return lineOffsets.length;
+	}
+	
+	override ulong start() {
+		return 0;
+	}
+	
+	override ulong end() {
+		return lineOffsets.length - 1;
+	}
+
+    // Return log line i
+    override string opIndex(long i) {
+        if (!f.isOpen()) {
+            f.open(this.filename);
+        }
+        long startOffset = lineOffsets[i];
+        long endOffset = lineOffsets[i+1] - 1;
+
+        writeln(startOffset);
+        writeln(endOffset);
+
+        writeln("length of offset: ", endOffset - startOffset);
+
+        ubyte[] buffer;
+        buffer.length = endOffset - startOffset;
+
+        f.seek(startOffset);
+        auto data = f.rawRead(buffer);
+        return data.assumeUTF;
+    }
+
+    private Tid tid;
+    void spawnIndexingThread() {
+        this.tid = spawn(cast(shared)&FileLog.indexingThread, this.filename);
+    }
+
 }
