@@ -4,6 +4,7 @@ import std.typecons : Typedef;
 import std.range : InputRange;
 import std.concurrency;
 import std.typecons;
+import std.variant;
 
 import logmaster.backendevents;
 
@@ -46,7 +47,7 @@ abstract class LoggingBackend {
     /**
      * Create a new instance of logging backend.
      */
-    this(string shortTitle, string longTitle) {
+    this(string longTitle, string shortTitle) {
         this.shortTitle = shortTitle;
         this.longTitle = longTitle;
         this.id = availableID++;
@@ -54,7 +55,7 @@ abstract class LoggingBackend {
 
     /// Percentage that implexing has completed Will be negative if not
     /// available (i.e for unknown log sizes) Will be 100.0 if complete
-    float indexingPercentage;
+    float indexingPercentage = 0.0;
 
     // Log array indexing and slicing.
     string opIndex(long i);
@@ -78,12 +79,9 @@ abstract class LoggingBackend {
     // Backends should be responsible for managing their own threads.
     void spawnIndexingThread();
 
-    protected void sendEvent(T)(T event) {
-        BackendEvent b;
-        b.backendID = this.id;
-        b.payload = event;
-        send(ownerTid(), b);
-    }
+    // Handle a backend event.
+    void handleEvent(Variant v);
+
 }
 
 // Log interface where logs are just streamed to the cache. There is no source

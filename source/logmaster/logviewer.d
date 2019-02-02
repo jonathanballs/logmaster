@@ -32,6 +32,7 @@ class LogViewer : ScrolledWindow {
 
     this(LoggingBackend backend) {
         this.backend = backend;
+        progressBar = new ProgressBar();
 
         /*
          * Create tree view and list store
@@ -48,30 +49,27 @@ class LogViewer : ScrolledWindow {
         /*
          * Set default message saying that there aren't any logs yet
          */
-        if (this.backend.indexingPercentage < 100.0) {
+        import std.stdio;
+        if (this.backend.indexingPercentage < 1.0) {
             progressBar = new ProgressBar();
             progressBar.setHalign(GtkAlign.CENTER);
             progressBar.setValign(GtkAlign.CENTER);
             this.add(progressBar);
-            progressBar.setFraction(this.backend.indexingPercentage);
+            // progressBar.setFraction(this.backend.indexingPercentage);
         } else {
             this.add(treeView);
         }
     }
 
     void handleEvent(Variant v) {
-        if (v.type == typeid(EventIndexingProgress)) {
-            auto e = v.get!EventIndexingProgress;
-            if (e.progressPercentage < 1.0) {
-                this.progressBar.setFraction(e.progressPercentage);
-            } else {
-                this.removeAll();
-                this.add(treeView);
-                this.showAll();
-            }
-        } else {
-            import std.stdio : writeln;
-            writeln("ERR: can't handle this event");
+        // Pass event on
+        this.backend.handleEvent(v);
+
+        this.progressBar.setFraction(backend.indexingPercentage);
+        if (backend.indexingPercentage == 1.0) {
+            this.removeAll();
+            this.add(treeView);
+            this.showAll();
         }
     }
 }

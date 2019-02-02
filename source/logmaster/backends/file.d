@@ -34,13 +34,13 @@ class FileBackend : LoggingBackend {
     ulong[] lineOffsets;
 
     override bool isIndexed() {
-        return this.indexingPercentage == 100.0;
+        return this.indexingPercentage == 1.0;
     }
 
     // Receive events from the frontend
     protected void receiveEvents() {
         while (receiveTimeout(-1.msecs, (Variant v) {
-                writeln(v);
+                writeln("Received event ", v);
             })) {}
     }
 
@@ -54,6 +54,17 @@ class FileBackend : LoggingBackend {
 
     override ulong end() {
         return lineOffsets.length - 1;
+    }
+
+    override void handleEvent(Variant v) {
+        if (v.type == typeid(EventIndexingProgress)) {
+            auto e = v.get!EventIndexingProgress;
+            this.indexingPercentage = e.progressPercentage;
+            this.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
+        } else {
+            import std.stdio : writeln;
+            writeln("ERR: can't handle this event");
+        }
     }
 
     // Return log line istruct IndexingProgress {
@@ -70,9 +81,6 @@ class FileBackend : LoggingBackend {
         long startOffset = lineOffsets[i];
         long endOffset = lineOffsets[i + 1] - 1;
 
-        writeln(startOffset);
-        writeln(endOffset);
-
         writeln("length of offset: ",
                 endOffset - startOffset);
 
@@ -86,43 +94,78 @@ class FileBackend : LoggingBackend {
 
     private Tid tid;
     override void spawnIndexingThread() {
-        this.tid = spawn((shared FileBackend self) {
+        this.tid = spawn((string filename, BackendID backendID) {
             try {
-                (cast(FileBackend) self).indexingThread();
+                auto indexer = new FileIndexer(filename, backendID);
+                indexer.indexingThread();
             } catch (Exception e) {
-                EventException event = EventException(e);
-                (cast(FileBackend)self).sendEvent(event);
+                writeln(e);
             }
-        }, cast(shared) this);
+
+            // try {
+            //     (cast(FileBackend) self).indexingThread();
+            // } catch (Exception e) {
+            //     writeln(e);
+            //     EventException event = EventException(e);
+            //     (cast(FileBackend)self).sendEvent(event);
+            // }
+        }, cast(shared) this.filename, this.id);
     }
+
+}
+
+private class FileIndexer {
+    string filename;
+    BackendID backendID;
+
+    this(string filename, BackendID backendID) {
+        this.filename = filename;
+        this.backendID = backendID;
+    }
+
+    ulong[] lineOffsets;
 
     void indexingThread() {
         StopWatch s;
         s.start();
         ulong bufNum;
         File f = File(filename);
-
         lineOffsets = [0];
+
         foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
             auto offset = (bufNum * BUFSIZ); // Index after the nl char
-
-            if (!(bufNum % 1000)) {
-                this.indexingPercentage = cast(
-                        float) offset / f.size();
-                auto e = EventIndexingProgress(this.indexingPercentage);
-                this.sendEvent(e);
-            }
 
             foreach (j, b; buf) {
                 if (b == '\n') {
                     lineOffsets ~= offset + j + 1;
                 }
             }
+
+            // Send updates to front end
+            if (!(bufNum % 1000)) {
+                auto e = EventIndexingProgress();
+                e.progressPercentage = (cast(float) offset + buf.length) / f.size();
+
+                // Split the new indexes into chunks
+                import std.range: chunks;
+                foreach (chunk; lineOffsets.chunks(e.lineOffsets.length)) {
+                    e.lineOffsets[0..chunk.length] = chunk;
+                    e.lineOffsetsLength = cast(short) chunk.length;
+                    this.sendEvent(e);
+                }
+                lineOffsets = [];
+            }
+
             bufNum++;
         }
-
         this.sendEvent(EventIndexingProgress(1.0));
-
         s.stop();
+    }
+
+    protected void sendEvent(T)(T event) {
+        BackendEvent b;
+        b.backendID = this.backendID;
+        b.payload = event;
+        send(ownerTid(), b);
     }
 }
