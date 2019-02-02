@@ -1,15 +1,17 @@
-import std.algorithm;
-import std.conv;
-import std.concurrency;
-import std.datetime.stopwatch;
-import std.stdio;
-import std.file;
-import std.range;
-import std.string;
+module logmaster.backends.file;
 
+import std.algorithm;
+import std.concurrency;
+import std.conv;
+import std.datetime.stopwatch;
+import std.file;
+import std.path;
+import std.range;
+import std.stdio;
+import std.string;
 import core.time;
 
-import loginterface;
+import logmaster.backend;
 
 enum IndexesSize = 4000;
 
@@ -21,7 +23,7 @@ struct IndexingProgress {
     bool isFinished;
 }
 
-class FileLog : LogInterface {
+class FileBackend : LoggingBackend {
 
     string filename;
     File f;
@@ -31,6 +33,7 @@ class FileLog : LogInterface {
      *      filePath = Path of the file to open
      */
     this(string filePath) {
+        super(filePath, baseName(filePath));
         filename = filePath;
     }
 
@@ -94,7 +97,13 @@ class FileLog : LogInterface {
 		return lineOffsets.length - 1;
 	}
 
-    // Return log line i
+    // Return log line istruct IndexingProgress {
+    /// Float between 0 and 100
+    float progressPercentage;
+    ulong[IndexesSize] newIndexes;
+
+    bool isFinished;
+
     override string opIndex(long i) {
         if (!f.isOpen()) {
             f.open(this.filename);
@@ -117,7 +126,6 @@ class FileLog : LogInterface {
 
     private Tid tid;
     void spawnIndexingThread() {
-        this.tid = spawn(cast(shared)&FileLog.indexingThread, this.filename);
+        this.tid = spawn(cast(shared)&FileBackend.indexingThread, this.filename);
     }
-
 }

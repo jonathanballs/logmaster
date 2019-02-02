@@ -25,9 +25,9 @@ import gdk.FrameClock;
 import gdk.Keysyms;
 import glib.Timeout;
 
-import logmaster.backend;
 import logmaster.constants;
 import logmaster.logviewer;
+import logmaster.backend;
 
 
 /// GtkMainWindow subclass for Logmaster
@@ -143,28 +143,28 @@ class LogmasterWindow : MainWindow {
         }
 
         while(receiveTimeout(-1.msecs,
-            (shared BeventNewLogLines event) {
-                auto logViewer = this.logViewers[event.backendId];
-                // TreeIter iter = logViewer.listStore.createIter();
-                // logViewer.listStore.setValue(iter, 0, event.line);
-            },
-            (shared BeventException event) {
-                auto logViewer = this.logViewers[event.backendId];
-                writeln(cast(Exception)event.e);
+            // (shared BeventNewLogLines event) {
+            //     auto logViewer = this.logViewers[event.backendId];
+            //     // TreeIter iter = logViewer.listStore.createIter();
+            //     // logViewer.listStore.setValue(iter, 0, event.line);
+            // },
+            // (shared BeventException event) {
+            //     auto logViewer = this.logViewers[event.backendId];
+            //     writeln(cast(Exception)event.e);
 
-                import gtk.MessageDialog;
-                auto dialog = new MessageDialog(this,
-                    GtkDialogFlags.DESTROY_WITH_PARENT,
-                    GtkMessageType.ERROR,
-                    GtkButtonsType.OK,
-                    format!("An Exception occured on backend thread %d (%s). A "
-                        ~ "stack trace is available in the console and the logs.")
-                        (event.backendId, backends[event.backendId].longTitle)
-                    );
-                dialog.run();
-                dialog.destroy();
-                removeBackend(event.backendId);
-            }
+            //     import gtk.MessageDialog;
+            //     auto dialog = new MessageDialog(this,
+            //         GtkDialogFlags.DESTROY_WITH_PARENT,
+            //         GtkMessageType.ERROR,
+            //         GtkButtonsType.OK,
+            //         format!("An Exception occured on backend thread %d (%s). A "
+            //             ~ "stack trace is available in the console and the logs.")
+            //             (event.backendId, backends[event.backendId].longTitle)
+            //         );
+            //     dialog.run();
+            //     dialog.destroy();
+            //     removeBackend(event.backendId);
+            // }
         )) {}
 
         return true;
@@ -195,7 +195,7 @@ class LogmasterWindow : MainWindow {
         logViewers.remove(backendId);
 
         // 3. End background process
-        backend.tid.send(BeventExitThread());
+        // backend.tid.send(BeventExitThread());
     }
 
     /**

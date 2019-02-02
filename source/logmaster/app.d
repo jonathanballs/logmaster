@@ -12,8 +12,8 @@ import gtk.Main;
 import gtk.Widget;
 
 import logmaster.window;
-import logmaster.backends.file;
-import logmaster.backends.stream;
+// import logmaster.backends.file;
+// import logmaster.backends.stream;
 
 int main(string[] args)
 {
@@ -38,9 +38,9 @@ int main(string[] args)
         if (filename == "-") {
             auto stdinName = getStdinName();
             auto stdinShortName = stdinName.split(' ')[0];
-            window.addBackend(new UnixStreamBackend(stdin, stdinShortName, stdinName));
+            // window.addBackend(new UnixStreamBackend(stdin, stdinShortName, stdinName));
         } else {
-            window.addBackend(new FileBackend(filename));
+            // window.addBackend(new FileBackend(filename));
         }
     }
 
@@ -52,10 +52,10 @@ int main(string[] args)
 
     // Open these automatically during development just to be quick
     debug {
-        if (!opts.files.canFind(["-"])) {
-            window.addBackend(new UnixStreamBackend(stdin, "stdin"));
-        }
-        window.addBackend(new FileBackend("/var/log/pacman.log"));
+        // if (!opts.files.canFind(["-"])) {
+        //     window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+        // }
+        // window.addBackend(new FileBackend("/var/log/pacman.log"));
     }
 
     window.showAll();
