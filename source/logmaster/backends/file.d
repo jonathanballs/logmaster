@@ -52,6 +52,7 @@ class FileBackend : LoggingBackend {
 
             if ((bufNum % 1000) == 0) {
                 this.indexingPercentage = (100 * cast(float)offset) / f.size();
+                writeln(this.indexingPercentage);
             }
 
             foreach (j, b; buf) {
@@ -125,7 +126,7 @@ class FileBackend : LoggingBackend {
     }
 
     private Tid tid;
-    void spawnIndexingThread() {
+    override void spawnIndexingThread() {
         this.tid = spawn(cast(shared)&FileBackend.indexingThread, this.filename);
     }
 }

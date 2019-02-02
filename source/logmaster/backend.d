@@ -71,6 +71,10 @@ abstract class LoggingBackend {
     // Last log id. Depending on implementation, may be zero. Useful for going
     // to the end of the log.
     ulong end();
+
+    // Backends should be responsible for managing their own threads.
+    void spawnIndexingThread() {
+    }
 }
 
 // Log interface where logs are just streamed to the cache. There is no source

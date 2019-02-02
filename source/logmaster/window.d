@@ -202,7 +202,7 @@ class LogmasterWindow : MainWindow {
      * Register a new backend. This starts the backend thread;
      */
     void addBackend(LoggingBackend backend) {
-        backend.start();
+        backend.spawnIndexingThread();
         this.backends[backend.id] = backend;
         auto logViewer = new LogViewer(backend.id);
         logViewers[backend.id] = logViewer;

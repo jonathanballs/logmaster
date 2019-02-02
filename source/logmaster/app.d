@@ -12,7 +12,7 @@ import gtk.Main;
 import gtk.Widget;
 
 import logmaster.window;
-// import logmaster.backends.file;
+import logmaster.backends.file;
 // import logmaster.backends.stream;
 
 int main(string[] args)
@@ -55,7 +55,8 @@ int main(string[] args)
         // if (!opts.files.canFind(["-"])) {
         //     window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         // }
-        // window.addBackend(new FileBackend("/var/log/pacman.log"));
+        window.addBackend(new FileBackend("/var/log/pacman.log"));
+        window.addBackend(new FileBackend("/home/jonathan/biglog.json"));
     }
 
     window.showAll();
