@@ -12,18 +12,12 @@ import std.string;
 import core.time;
 
 import logmaster.backend;
+import logmaster.backendevents;
 
 enum IndexesSize = 4000;
 
-struct IndexingProgress {
-    /// Float between 0 and 100
-    float progressPercentage;
-    ulong[IndexesSize] newIndexes;
-
-    bool isFinished;
-}
-
-class FileBackend : LoggingBackend {
+class FileBackend : LoggingBackend
+{
 
     string filename;
     File f;
@@ -32,71 +26,42 @@ class FileBackend : LoggingBackend {
      * Params:
      *      filePath = Path of the file to open
      */
-    this(string filePath) {
+    this(string filePath)
+    {
         super(filePath, baseName(filePath));
         filename = filePath;
     }
 
-    __gshared ulong[] lineOffsets;
+    ulong[] lineOffsets;
 
-    static void indexingThread(string filename) {
-        StopWatch s;
-        s.start();
-        ulong bufNum;
-        File f = File(filename);
-
-        lineOffsets = [0];
-        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
-
-            auto offset = (bufNum*BUFSIZ); // Index after the nl char
-
-            if ((bufNum % 1000) == 0) {
-                this.indexingPercentage = (100 * cast(float)offset) / f.size();
-                writeln(this.indexingPercentage);
-            }
-
-            foreach (j, b; buf) {
-                if (b == '\n') {
-                    lineOffsets ~= offset + j + 1;
-                }
-            }
-            bufNum++;
-        }
-
-        this.indexingPercentage = 100.0;
-        s.stop();
-        writeln(s.peek.total!"seconds");
-
-        // Send message to main thread
-        writeln("Finished");
-    }
-	
-	// InputRange!string opSlice(long i, long j) {
-	// 	return [];
-	// }
-
-    override bool isIndexed() {
+    override bool isIndexed()
+    {
         return this.indexingPercentage == 100.0;
     }
 
-    void receiveEvents() {
-        while(receiveTimeout(-1.msecs,
-        (Variant v) {
-            writeln(v);
-        })) {}
+    void receiveEvents()
+    {
+        while (receiveTimeout(-1.msecs, (Variant v) {
+                writeln(v);
+            }))
+        {
+        }
     }
-	
-	override ulong opDollar() {
-		return lineOffsets.length;
-	}
-	
-	override ulong start() {
-		return 0;
-	}
-	
-	override ulong end() {
-		return lineOffsets.length - 1;
-	}
+
+    override ulong opDollar()
+    {
+        return lineOffsets.length;
+    }
+
+    override ulong start()
+    {
+        return 0;
+    }
+
+    override ulong end()
+    {
+        return lineOffsets.length - 1;
+    }
 
     // Return log line istruct IndexingProgress {
     /// Float between 0 and 100
@@ -105,17 +70,20 @@ class FileBackend : LoggingBackend {
 
     bool isFinished;
 
-    override string opIndex(long i) {
-        if (!f.isOpen()) {
+    override string opIndex(long i)
+    {
+        if (!f.isOpen())
+        {
             f.open(this.filename);
         }
         long startOffset = lineOffsets[i];
-        long endOffset = lineOffsets[i+1] - 1;
+        long endOffset = lineOffsets[i + 1] - 1;
 
         writeln(startOffset);
         writeln(endOffset);
 
-        writeln("length of offset: ", endOffset - startOffset);
+        writeln("length of offset: ",
+                endOffset - startOffset);
 
         ubyte[] buffer;
         buffer.length = endOffset - startOffset;
@@ -127,6 +95,48 @@ class FileBackend : LoggingBackend {
 
     private Tid tid;
     override void spawnIndexingThread() {
-        this.tid = spawn(cast(shared)&FileBackend.indexingThread, this.filename);
+        this.tid = spawn((shared FileBackend self) {
+            try {
+                (cast(FileBackend) self).indexingThread();
+            } catch (Exception e) {
+                EventException event = EventException(e);
+                (cast(FileBackend)self).sendEvent(event);
+            }
+        }, cast(shared) this);
+    }
+
+    void indexingThread() {
+        StopWatch s;
+        s.start();
+        ulong bufNum;
+        File f = File(filename);
+
+        lineOffsets = [0];
+        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ]))
+        {
+
+            auto offset = (bufNum * BUFSIZ); // Index after the nl char
+
+            if (!(bufNum % 1000))
+            {
+                this.indexingPercentage = cast(
+                        float) offset / f.size();
+                auto e = EventIndexingProgress(this.indexingPercentage);
+                this.sendEvent(e);
+            }
+
+            foreach (j, b; buf)
+            {
+                if (b == '\n')
+                {
+                    lineOffsets ~= offset + j + 1;
+                }
+            }
+            bufNum++;
+        }
+
+        this.sendEvent(EventIndexingProgress(1.0));
+
+        s.stop();
     }
 }

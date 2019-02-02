@@ -28,6 +28,7 @@ import glib.Timeout;
 import logmaster.constants;
 import logmaster.logviewer;
 import logmaster.backend;
+import logmaster.backendevents;
 
 
 /// GtkMainWindow subclass for Logmaster
@@ -71,7 +72,7 @@ class LogmasterWindow : MainWindow {
      * Set the long title as a subtitle when opening a backend
      */
     void onChangeLogviewer(Widget w, uint pageNum, Notebook n) {
-        auto backendId = (cast(LogViewer)notebook.getNthPage(pageNum)).backendId;
+        auto backendId = (cast(LogViewer)notebook.getNthPage(pageNum)).backend.id;
         this.headerBar.setSubtitle(backends[backendId].longTitle);
     }
 
@@ -93,7 +94,7 @@ class LogmasterWindow : MainWindow {
                     writeln("Exit the program");
                 } else {
                     auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
-                    this.removeBackend(currentPage.backendId);
+                    this.removeBackend(currentPage.backend.id);
                 }
                 break;
             // Cycle tabs
@@ -143,6 +144,11 @@ class LogmasterWindow : MainWindow {
         }
 
         while(receiveTimeout(-1.msecs,
+            (BackendEvent event) {
+                LogViewer logViewer = this.logViewers[event.backendID];
+                auto e = cast(BackendEvent) event;
+                logViewer.handleEvent(e.payload);
+            }
             // (shared BeventNewLogLines event) {
             //     auto logViewer = this.logViewers[event.backendId];
             //     // TreeIter iter = logViewer.listStore.createIter();
@@ -187,7 +193,7 @@ class LogmasterWindow : MainWindow {
         // 2. Remove tab
         foreach(i; 0..notebook.getNPages()) {
             auto logviewer = cast(LogViewer)notebook.getNthPage(i);
-            if (logviewer.backendId == backendId) {
+            if (logviewer.backend.id == backendId) {
                 notebook.removePage(i);
                 break;
             }
@@ -204,7 +210,7 @@ class LogmasterWindow : MainWindow {
     void addBackend(LoggingBackend backend) {
         backend.spawnIndexingThread();
         this.backends[backend.id] = backend;
-        auto logViewer = new LogViewer(backend.id);
+        auto logViewer = new LogViewer(backend);
         logViewers[backend.id] = logViewer;
 
         // Create the label

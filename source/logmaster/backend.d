@@ -2,7 +2,10 @@ module logmaster.backend;
 
 import std.typecons : Typedef;
 import std.range : InputRange;
+import std.concurrency;
 import std.typecons;
+
+import logmaster.backendevents;
 
 alias BackendID = Typedef!(int);
 private static BackendID availableID = 0;
@@ -51,7 +54,7 @@ abstract class LoggingBackend {
 
     /// Percentage that implexing has completed Will be negative if not
     /// available (i.e for unknown log sizes) Will be 100.0 if complete
-    __gshared float indexingPercentage;
+    float indexingPercentage;
 
     // Log array indexing and slicing.
     string opIndex(long i);
@@ -73,7 +76,13 @@ abstract class LoggingBackend {
     ulong end();
 
     // Backends should be responsible for managing their own threads.
-    void spawnIndexingThread() {
+    void spawnIndexingThread();
+
+    protected void sendEvent(T)(T event) {
+        BackendEvent b;
+        b.backendID = this.id;
+        b.payload = event;
+        send(ownerTid(), b);
     }
 }
 

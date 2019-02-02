@@ -10,6 +10,10 @@ import gtk.TreePath;
 import gtk.TreeModelIF;
 import gtk.TreeModelT;
 import gtkd.Implement;
+import gtk.TreeViewColumn;
+import gtk.CellRendererText;
+
+import logmaster.backend;
 
 alias Column = Tuple!(string, "title", GType, "type");
 
@@ -36,6 +40,8 @@ class LazyTreeModel : ObjectG, TreeModelIF
     CustomRecord*[] rows;
     int stamp;
 
+    LoggingBackend backend;
+
     mixin ImplementInterface!(GObject, GtkTreeModelIface);
     mixin TreeModelT!(GtkTreeModel);
 
@@ -53,6 +59,22 @@ class LazyTreeModel : ObjectG, TreeModelIF
         foreach (i; 0..200) {
             this.appendRecord("Jonathan Balls", 1996);
         }
+    }
+
+    TreeViewColumn[] getTreeViewColumns() {
+        TreeViewColumn[] ret;
+        foreach (i, column; this.columns) {
+            if (i==0) continue;
+
+            auto treeViewColumn = new TreeViewColumn();
+            auto renderer = new CellRendererText();
+            treeViewColumn.packStart(renderer, true);
+            treeViewColumn.addAttribute(renderer, "text", cast(int)i);
+            treeViewColumn.setTitle(this.columns[i].title);
+            ret ~= treeViewColumn;
+        }
+
+        return ret;
     }
 
     /*

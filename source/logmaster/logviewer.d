@@ -1,30 +1,37 @@
 module logmaster.logviewer;
 
 import std.concurrency;
+import std.variant;
 import core.thread;
 import gdk.FrameClock;
+import gtk.Alignment;
 import gtk.CellRendererText;
 import gtk.ScrolledWindow;
 import gtk.TreeIter;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
+import gtk.ProgressBar;
 
-import logmaster.backend;
 import logmaster.lazytreemodel;
+import logmaster.backend;
+import logmaster.backendevents;
 
 class LogViewer : ScrolledWindow {
 
     // Meta
     string shortTitle;
-    BackendID backendId;
+    LoggingBackend backend;
 
     // Implementation
     TreeView treeView;
     LazyTreeModel model;
 
-    this(BackendID bid) {
-        this.backendId = bid;
+    Alignment progressAlignment;
+    ProgressBar progressBar;
+
+    this(LoggingBackend backend) {
+        this.backend = backend;
 
         /*
          * Create tree view and list store
@@ -36,26 +43,32 @@ class LogViewer : ScrolledWindow {
 
         treeView.setModel(this.model);
 
-        TreeViewColumn col;
-        CellRendererText renderer;
-        col = new TreeViewColumn();
-		renderer  = new CellRendererText();
-		col.packStart(renderer, true);
-		col.addAttribute(renderer, "text", CustomListColumn.Name);
-		col.setTitle("Name");
-		treeView.appendColumn(col);
-
-		col = new TreeViewColumn();
-		renderer  = new CellRendererText();
-		col.packStart(renderer, true);
-		col.addAttribute(renderer, "text", CustomListColumn.YearBorn);
-		col.setTitle("Year Born");
-		treeView.appendColumn(col);
+        foreach (column; this.model.getTreeViewColumns) {
+            treeView.appendColumn(column);
+        }
 
         /*
          * Set default message saying that there aren't any logs yet
          */
 
-        this.add(treeView);
+        if (this.backend.indexingPercentage < 100.0) {
+            progressBar = new ProgressBar();
+            progressBar.setHalign(GtkAlign.CENTER);
+            progressBar.setValign(GtkAlign.CENTER);
+            this.add(progressBar);
+            progressBar.setFraction(this.backend.indexingPercentage);
+        } else {
+            this.add(treeView);
+        }
+    }
+
+    void handleEvent(Variant v) {
+        if (v.type == typeid(EventIndexingProgress)) {
+            auto e = v.get!EventIndexingProgress;
+            this.progressBar.setFraction(e.progressPercentage);
+        } else {
+            import std.stdio : writeln;
+            writeln("ERR: can't handle this event");
+        }
     }
 }
