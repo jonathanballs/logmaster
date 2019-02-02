@@ -38,9 +38,7 @@ class LogViewer : ScrolledWindow {
          */
         this.treeView = new TreeView();
         this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
-
         this.model = new LazyTreeModel();
-
         treeView.setModel(this.model);
 
         foreach (column; this.model.getTreeViewColumns) {
@@ -50,7 +48,6 @@ class LogViewer : ScrolledWindow {
         /*
          * Set default message saying that there aren't any logs yet
          */
-
         if (this.backend.indexingPercentage < 100.0) {
             progressBar = new ProgressBar();
             progressBar.setHalign(GtkAlign.CENTER);
@@ -65,7 +62,13 @@ class LogViewer : ScrolledWindow {
     void handleEvent(Variant v) {
         if (v.type == typeid(EventIndexingProgress)) {
             auto e = v.get!EventIndexingProgress;
-            this.progressBar.setFraction(e.progressPercentage);
+            if (e.progressPercentage < 1.0) {
+                this.progressBar.setFraction(e.progressPercentage);
+            } else {
+                this.removeAll();
+                this.add(treeView);
+                this.showAll();
+            }
         } else {
             import std.stdio : writeln;
             writeln("ERR: can't handle this event");

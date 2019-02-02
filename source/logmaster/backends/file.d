@@ -16,8 +16,7 @@ import logmaster.backendevents;
 
 enum IndexesSize = 4000;
 
-class FileBackend : LoggingBackend
-{
+class FileBackend : LoggingBackend {
 
     string filename;
     File f;
@@ -34,32 +33,26 @@ class FileBackend : LoggingBackend
 
     ulong[] lineOffsets;
 
-    override bool isIndexed()
-    {
+    override bool isIndexed() {
         return this.indexingPercentage == 100.0;
     }
 
-    void receiveEvents()
-    {
+    // Receive events from the frontend
+    protected void receiveEvents() {
         while (receiveTimeout(-1.msecs, (Variant v) {
                 writeln(v);
-            }))
-        {
-        }
+            })) {}
     }
 
-    override ulong opDollar()
-    {
+    override ulong opDollar() {
         return lineOffsets.length;
     }
 
-    override ulong start()
-    {
+    override ulong start() {
         return 0;
     }
 
-    override ulong end()
-    {
+    override ulong end() {
         return lineOffsets.length - 1;
     }
 
@@ -70,10 +63,8 @@ class FileBackend : LoggingBackend
 
     bool isFinished;
 
-    override string opIndex(long i)
-    {
-        if (!f.isOpen())
-        {
+    override string opIndex(long i) {
+        if (!f.isOpen()) {
             f.open(this.filename);
         }
         long startOffset = lineOffsets[i];
@@ -112,23 +103,18 @@ class FileBackend : LoggingBackend
         File f = File(filename);
 
         lineOffsets = [0];
-        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ]))
-        {
-
+        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
             auto offset = (bufNum * BUFSIZ); // Index after the nl char
 
-            if (!(bufNum % 1000))
-            {
+            if (!(bufNum % 1000)) {
                 this.indexingPercentage = cast(
                         float) offset / f.size();
                 auto e = EventIndexingProgress(this.indexingPercentage);
                 this.sendEvent(e);
             }
 
-            foreach (j, b; buf)
-            {
-                if (b == '\n')
-                {
+            foreach (j, b; buf) {
+                if (b == '\n') {
                     lineOffsets ~= offset + j + 1;
                 }
             }
