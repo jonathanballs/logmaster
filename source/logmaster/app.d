@@ -56,7 +56,7 @@ int main(string[] args)
         //     window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         // }
         window.addBackend(new FileBackend("/var/log/pacman.log"));
-        window.addBackend(new FileBackend("/home/jonathan/biglog.json"));
+        // window.addBackend(new FileBackend("/home/jonathan/biglog.json"));
     }
 
     window.showAll();

@@ -11,26 +11,7 @@ import logmaster.backendevents;
 alias BackendID = Typedef!(int);
 private static BackendID availableID = 0;
 
-// General thoughts: All data should be on main thread. Other threads operate
-// and amend this data. We will have to think about safety: send updates via
-// message, to main thread who will handle data accordingly.
-
-// Still thinking about: Use of ranges is very useful. Should look into ref as
-// well. Iterating over the array should be done in place.
-
-// The log is randomly accessible in byte form. e.g. files, sshfs, over http.
-// NOT for papertrail
-interface RawLogData {
-    ulong size(); // Optional
-    ubyte opIndex(ulong i);
-
-    // From char to char
-    ubyte[] opSlice(ulong i, ulong j);
-    ulong opDollar();
-
-    // Make this range
-    ubyte[] byChunk();
-}
+alias LogLine = Tuple!(ulong, "lineID", string, "message");
 
 // NB: LoggingBackend should be fine for general lookup (if isIndexed is true)
 // Many log types will have special features (which is good) but those features
@@ -39,7 +20,6 @@ interface RawLogData {
 // app. This should be fully modular so it is portable (for both mac and linux
 // as well as a potential "remote daemon" to process logs on a server)
 abstract class LoggingBackend {
-
     string shortTitle;
     string longTitle;
     BackendID id;
@@ -58,7 +38,7 @@ abstract class LoggingBackend {
     float indexingPercentage = 0.0;
 
     // Log array indexing and slicing.
-    string opIndex(long i);
+    LogLine opIndex(long i);
     // InputRange!string opSlice(long i, long j);
     ulong opDollar();
 

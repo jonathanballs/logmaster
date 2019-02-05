@@ -70,26 +70,27 @@ class FileBackend : LoggingBackend {
     // Return log line istruct IndexingProgress {
     /// Float between 0 and 100
     float progressPercentage;
-    ulong[IndexesSize] newIndexes;
 
-    bool isFinished;
-
-    override string opIndex(long i) {
+    override LogLine opIndex(long i) {
         if (!f.isOpen()) {
             f.open(this.filename);
         }
-        long startOffset = lineOffsets[i];
-        long endOffset = lineOffsets[i + 1] - 1;
 
-        writeln("length of offset: ",
-                endOffset - startOffset);
+        long startOffset = lineOffsets[i];
+        long endOffset;
+
+        if (i+1 < end()) {
+            endOffset = lineOffsets[i + 1] - 1;
+        } else {
+            endOffset = f.size() - 1;
+        }
 
         ubyte[] buffer;
         buffer.length = endOffset - startOffset;
 
         f.seek(startOffset);
         auto data = f.rawRead(buffer);
-        return data.assumeUTF;
+        return LogLine(i, data.assumeUTF);
     }
 
     private Tid tid;
@@ -101,14 +102,6 @@ class FileBackend : LoggingBackend {
             } catch (Exception e) {
                 writeln(e);
             }
-
-            // try {
-            //     (cast(FileBackend) self).indexingThread();
-            // } catch (Exception e) {
-            //     writeln(e);
-            //     EventException event = EventException(e);
-            //     (cast(FileBackend)self).sendEvent(event);
-            // }
         }, cast(shared) this.filename, this.id);
     }
 
@@ -118,19 +111,20 @@ private class FileIndexer {
     string filename;
     BackendID backendID;
 
+    File f;
+    ulong[] lineOffsets;
+
     this(string filename, BackendID backendID) {
         this.filename = filename;
         this.backendID = backendID;
     }
 
-    ulong[] lineOffsets;
 
     void indexingThread() {
         StopWatch s;
         s.start();
         ulong bufNum;
-        File f = File(filename);
-        lineOffsets = [0];
+        f = File(filename);
 
         foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
             auto offset = (bufNum * BUFSIZ); // Index after the nl char
@@ -143,23 +137,29 @@ private class FileIndexer {
 
             // Send updates to front end
             if (!(bufNum % 1000)) {
-                auto e = EventIndexingProgress();
-                e.progressPercentage = (cast(float) offset + buf.length) / f.size();
-
-                // Split the new indexes into chunks
-                import std.range: chunks;
-                foreach (chunk; lineOffsets.chunks(e.lineOffsets.length)) {
-                    e.lineOffsets[0..chunk.length] = chunk;
-                    e.lineOffsetsLength = cast(short) chunk.length;
-                    this.sendEvent(e);
-                }
-                lineOffsets = [];
+                sendLineOffsets();
             }
 
             bufNum++;
         }
+        sendLineOffsets();
+
         this.sendEvent(EventIndexingProgress(1.0));
         s.stop();
+    }
+
+    protected void sendLineOffsets() {
+        auto e = EventIndexingProgress();
+        e.progressPercentage = (cast(float) f.tell() / f.size());
+
+        // Split the new indexes into chunks
+        import std.range: chunks;
+        foreach (chunk; lineOffsets.chunks(e.lineOffsets.length)) {
+            e.lineOffsets[0..chunk.length] = chunk;
+            e.lineOffsetsLength = cast(short) chunk.length;
+            this.sendEvent(e);
+        }
+        this.lineOffsets = [];
     }
 
     protected void sendEvent(T)(T event) {

@@ -8,12 +8,12 @@ import gtk.Alignment;
 import gtk.CellRendererText;
 import gtk.ScrolledWindow;
 import gtk.TreeIter;
-import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.ProgressBar;
 
 import logmaster.lazytreemodel;
+import logmaster.lazytreeview;
 import logmaster.backend;
 import logmaster.backendevents;
 
@@ -24,7 +24,7 @@ class LogViewer : ScrolledWindow {
     LoggingBackend backend;
 
     // Implementation
-    TreeView treeView;
+    LazyTreeView treeView;
     LazyTreeModel model;
 
     Alignment progressAlignment;
@@ -32,19 +32,7 @@ class LogViewer : ScrolledWindow {
 
     this(LoggingBackend backend) {
         this.backend = backend;
-        progressBar = new ProgressBar();
-
-        /*
-         * Create tree view and list store
-         */
-        this.treeView = new TreeView();
-        this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
-        this.model = new LazyTreeModel();
-        treeView.setModel(this.model);
-
-        foreach (column; this.model.getTreeViewColumns) {
-            treeView.appendColumn(column);
-        }
+        this.progressBar = new ProgressBar();
 
         /*
          * Set default message saying that there aren't any logs yet
@@ -67,6 +55,14 @@ class LogViewer : ScrolledWindow {
 
         this.progressBar.setFraction(backend.indexingPercentage);
         if (backend.indexingPercentage == 1.0) {
+            import std.stdio;
+
+            this.treeView = new LazyTreeView(this.backend);
+            // this.treeView.setFixedHeightMode(true);
+            // this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
+            // this.model = new LazyTreeModel(this.backend);
+            // treeView.setModel(this.model);
+
             this.removeAll();
             this.add(treeView);
             this.showAll();
