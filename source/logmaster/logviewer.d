@@ -12,7 +12,6 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.ProgressBar;
 
-import logmaster.lazytreemodel;
 import logmaster.lazytreeview;
 import logmaster.backend;
 import logmaster.backendevents;
@@ -25,7 +24,6 @@ class LogViewer : ScrolledWindow {
 
     // Implementation
     LazyTreeView treeView;
-    LazyTreeModel model;
 
     Alignment progressAlignment;
     ProgressBar progressBar;
@@ -58,10 +56,6 @@ class LogViewer : ScrolledWindow {
             import std.stdio;
 
             this.treeView = new LazyTreeView(this.backend);
-            // this.treeView.setFixedHeightMode(true);
-            // this.treeView.getSelection().setMode(GtkSelectionMode.NONE);
-            // this.model = new LazyTreeModel(this.backend);
-            // treeView.setModel(this.model);
 
             this.removeAll();
             this.add(treeView);
