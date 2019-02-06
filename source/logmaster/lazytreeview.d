@@ -14,7 +14,7 @@ import logmaster.backend;
 class LazyTreeView : Layout {
     LoggingBackend backend;
 
-    uint rowHeight = 25;
+    uint rowHeight = 20;
 
     uint allocatedWidth = 100;
     uint allocatedHeight = 100;
