@@ -14,7 +14,7 @@ import logmaster.backend;
 class LazyTreeView : Layout {
     LoggingBackend backend;
 
-    uint rowHeight = 30;
+    uint rowHeight = 25;
 
     uint allocatedWidth = 100;
     uint allocatedHeight = 100;
@@ -37,15 +37,16 @@ class LazyTreeView : Layout {
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        writeln(allocatedHeight);
-
         foreach (i; 0..(allocatedHeight / rowHeight) + 2) {
+            if (firstLineNumber + i > backend.end()) break;
+
             string message = backend[firstLineNumber + i].message;
             uint y = firstLineY + i*rowHeight;
             GdkRectangle rect = GdkRectangle(0, y,
                 this.allocatedWidth, this.rowHeight);
             CellRendererText renderer = new CellRendererText();
             renderer.setProperty("text", message);
+            renderer.setProperty("family", "Monospace");
             renderer.render(c, w, &rect, &rect, GtkCellRendererState.INSENSITIVE);
         }
 

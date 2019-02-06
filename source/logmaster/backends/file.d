@@ -82,7 +82,13 @@ class FileBackend : LoggingBackend {
         if (i+1 < end()) {
             endOffset = lineOffsets[i + 1] - 1;
         } else {
-            endOffset = f.size() - 1;
+            endOffset = f.size();
+        }
+
+        assert(startOffset <= endOffset);
+
+        if (startOffset == endOffset) {
+            return LogLine(i, "");
         }
 
         ubyte[] buffer;
