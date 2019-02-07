@@ -33,18 +33,13 @@ class LogViewer : ScrolledWindow {
         this.progressBar = new ProgressBar();
 
         /*
-         * Set default message saying that there aren't any logs yet
+         * Set the progress bar
          */
-        import std.stdio;
-        if (this.backend.indexingPercentage < 1.0) {
-            progressBar = new ProgressBar();
-            progressBar.setHalign(GtkAlign.CENTER);
-            progressBar.setValign(GtkAlign.CENTER);
-            this.add(progressBar);
-            // progressBar.setFraction(this.backend.indexingPercentage);
-        } else {
-            this.add(treeView);
-        }
+        progressBar = new ProgressBar();
+        progressBar.setHalign(GtkAlign.CENTER);
+        progressBar.setValign(GtkAlign.CENTER);
+        this.add(progressBar);
+        progressBar.setFraction(this.backend.indexingPercentage);
     }
 
     void handleEvent(Variant v) {
@@ -53,7 +48,8 @@ class LogViewer : ScrolledWindow {
 
         this.progressBar.setFraction(backend.indexingPercentage);
         if (backend.indexingPercentage == 1.0) {
-            import std.stdio;
+
+            if (this.treeView) return;
 
             this.treeView = new LazyTreeView(this.backend);
 

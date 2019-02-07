@@ -14,8 +14,6 @@ import core.time;
 import logmaster.backend;
 import logmaster.backendevents;
 
-enum IndexesSize = 4000;
-
 class FileBackend : LoggingBackend {
 
     string filename;
@@ -32,10 +30,6 @@ class FileBackend : LoggingBackend {
     }
 
     ulong[] lineOffsets;
-
-    override bool isIndexed() {
-        return this.indexingPercentage == 1.0;
-    }
 
     // Receive events from the frontend
     protected void receiveEvents() {
@@ -104,7 +98,7 @@ class FileBackend : LoggingBackend {
         this.tid = spawn((string filename, BackendID backendID) {
             try {
                 auto indexer = new FileIndexer(filename, backendID);
-                indexer.indexingThread();
+                indexer.start();
             } catch (Exception e) {
                 writeln(e);
             }
@@ -126,7 +120,7 @@ private class FileIndexer {
     }
 
 
-    void indexingThread() {
+    void start() {
         StopWatch s;
         s.start();
         ulong bufNum;

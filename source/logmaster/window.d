@@ -229,6 +229,7 @@ class LogmasterWindow : MainWindow {
             }
         }
 
+
         auto label = new Label(backend.shortTitle);
         label.setXalign(0.0);
         auto image = new Image(StockID.CLOSE, GtkIconSize.MENU);

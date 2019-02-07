@@ -13,7 +13,7 @@ import gtk.Widget;
 
 import logmaster.window;
 import logmaster.backends.file;
-// import logmaster.backends.stream;
+import logmaster.backends.unixstream;
 
 int main(string[] args)
 {
@@ -56,7 +56,8 @@ int main(string[] args)
         //     window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         // }
         window.addBackend(new FileBackend("/var/log/pacman.log"));
-        // window.addBackend(new FileBackend("/home/jonathan/biglog.json"));
+        window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+        // window.addBackend(new FileBackend("/home/jonathan/examplelogs/biglog.json"));
     }
 
     window.showAll();

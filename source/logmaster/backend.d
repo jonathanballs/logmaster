@@ -42,10 +42,6 @@ abstract class LoggingBackend {
     // InputRange!string opSlice(long i, long j);
     ulong opDollar();
 
-    // Has an index been created of _all_ lines. I.e. have line number from
-    // beginning to end. and can be fully queried by lineId.
-    bool isIndexed();
-
     // First log id. Depending on implementation, may not be zero. Useful for
     // going to the start of the log. E.g. for kubernetes, log may start at
     // negative. TODO: review this: could get kubernetes to start at 1. as tail
