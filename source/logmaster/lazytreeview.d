@@ -20,12 +20,11 @@ class LazyTreeView : Layout {
     uint allocatedHeight = 100;
 
     public this(LoggingBackend backend) {
-        this.backend = backend;
         super(null, null);
+        this.backend = backend;
         this.setSize(100, rowHeight * cast(uint) this.backend.opDollar());
         this.addOnSizeAllocate(&this.onSizeAllocate);
         this.addOnDraw(&this.onDraw);
-
 
         // Redraw on new lines
         this.backend.onNewLines.connect(() {
@@ -46,6 +45,8 @@ class LazyTreeView : Layout {
         Adjustment vAdjustment = this.getVadjustment();
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
+
+        if (backend.opDollar() == 0) return true;
 
         foreach (i; 0..(allocatedHeight / rowHeight) + 2) {
             if (firstLineNumber + i > backend.end()) break;

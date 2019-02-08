@@ -54,6 +54,7 @@ class FileBackend : LoggingBackend {
         if (v.type == typeid(EventIndexingProgress)) {
             auto e = v.get!EventIndexingProgress;
             this.indexingPercentage = e.progressPercentage;
+            this.onIndexingProgress.emit(this.indexingPercentage);
             this.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
         } else {
             import std.stdio : writeln;

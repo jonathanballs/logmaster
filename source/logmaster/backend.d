@@ -26,6 +26,7 @@ abstract class LoggingBackend {
     BackendID id;
 
     Signal!() onNewLines = new Signal!();
+    Signal!(float) onIndexingProgress = new Signal!(float);
 
     /**
      * Create a new instance of logging backend.

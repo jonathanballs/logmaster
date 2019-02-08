@@ -30,32 +30,38 @@ class LogViewer : ScrolledWindow {
 
     this(LoggingBackend backend) {
         this.backend = backend;
-        this.progressBar = new ProgressBar();
 
-        /*
-         * Set the progress bar
-         */
-        progressBar = new ProgressBar();
-        progressBar.setHalign(GtkAlign.CENTER);
-        progressBar.setValign(GtkAlign.CENTER);
-        this.add(progressBar);
-        progressBar.setFraction(this.backend.indexingPercentage);
+        if (this.backend.indexingPercentage == 1.0) {
+            this.treeView = new LazyTreeView(this.backend);
+            this.add(treeView);
+        } else {
+            this.progressBar = new ProgressBar();
+            /*
+            * Set the progress bar
+            */
+            progressBar = new ProgressBar();
+            progressBar.setHalign(GtkAlign.CENTER);
+            progressBar.setValign(GtkAlign.CENTER);
+            progressBar.setFraction(this.backend.indexingPercentage);
+            this.add(progressBar);
+
+            this.backend.onIndexingProgress.connect((float p) {
+                if (p < 1.0) {
+                    progressBar.setFraction(p);
+                } else {
+                    if (this.treeView) return;
+                    this.removeAll();
+                    this.treeView = new LazyTreeView(this.backend);
+                    this.add(treeView);
+                    this.showAll();
+                }
+            });
+        }
+
     }
 
     void handleEvent(Variant v) {
         // Pass event on
         this.backend.handleEvent(v);
-
-        this.progressBar.setFraction(backend.indexingPercentage);
-        if (backend.indexingPercentage == 1.0) {
-
-            if (this.treeView) return;
-
-            this.treeView = new LazyTreeView(this.backend);
-
-            this.removeAll();
-            this.add(treeView);
-            this.showAll();
-        }
     }
 }
