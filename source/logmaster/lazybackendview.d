@@ -1,4 +1,4 @@
-module logmaster.lazytreeview;
+module logmaster.lazybackendview;
 
 import std.stdio;
 import std.conv;
@@ -11,7 +11,7 @@ import gtk.CellRendererText;
 
 import logmaster.backend;
 
-class LazyTreeView : Layout {
+class LazyBackendView : Layout {
     LoggingBackend backend;
 
     uint rowHeight = 20;

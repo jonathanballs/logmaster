@@ -12,7 +12,7 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.ProgressBar;
 
-import logmaster.lazytreeview;
+import logmaster.lazybackendview;
 import logmaster.backend;
 import logmaster.backendevents;
 
@@ -23,7 +23,7 @@ class LogViewer : ScrolledWindow {
     LoggingBackend backend;
 
     // Implementation
-    LazyTreeView treeView;
+    LazyBackendView treeView;
 
     Alignment progressAlignment;
     ProgressBar progressBar;
@@ -32,7 +32,7 @@ class LogViewer : ScrolledWindow {
         this.backend = backend;
 
         if (this.backend.indexingPercentage == 1.0) {
-            this.treeView = new LazyTreeView(this.backend);
+            this.treeView = new LazyBackendView(this.backend);
             this.add(treeView);
         } else {
             this.progressBar = new ProgressBar();
@@ -51,7 +51,7 @@ class LogViewer : ScrolledWindow {
                 } else {
                     if (this.treeView) return;
                     this.removeAll();
-                    this.treeView = new LazyTreeView(this.backend);
+                    this.treeView = new LazyBackendView(this.backend);
                     this.add(treeView);
                     this.showAll();
                 }
