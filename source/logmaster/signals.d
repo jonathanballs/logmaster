@@ -3,6 +3,7 @@ import std.stdio;
 
 template Signal(T...) {
 
+    // Type of a slot
     alias slot_t = void delegate(T);
 
     class Signal {
@@ -20,14 +21,13 @@ template Signal(T...) {
     }
 }
 
-int main () {
-    void handler(int i, string s) {
-        writeln("I am a handler!!!");
-    }
+unittest {
+    writeln("Testing signals...");
 
+    bool called;
+    void handler(int i, string s) { called = true; }
     auto s = new Signal!(int, string);
     s.connect(&handler);
     s.emit(0x3, "string");
-
-    return 0;
+    assert(called);
 }

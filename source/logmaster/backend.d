@@ -7,6 +7,7 @@ import std.typecons;
 import std.variant;
 
 import logmaster.backendevents;
+import logmaster.signals;
 
 alias BackendID = Typedef!(int);
 private static BackendID availableID = 0;
@@ -23,6 +24,8 @@ abstract class LoggingBackend {
     string shortTitle;
     string longTitle;
     BackendID id;
+
+    Signal!() onNewLines = new Signal!();
 
     /**
      * Create a new instance of logging backend.

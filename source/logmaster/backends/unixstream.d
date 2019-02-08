@@ -35,6 +35,8 @@ class UnixStreamBackend : LoggingBackend {
         if (v.type == typeid(EventNewLine)) {
             auto e = v.get!EventNewLine;
             cache ~= e.newLine;
+
+            this.onNewLines.emit();
         }
     }
 
