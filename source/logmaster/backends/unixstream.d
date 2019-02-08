@@ -62,13 +62,9 @@ private class UnixStreamIndexer {
     }
 
     void start() {
-        sendEvent(EventNewLine("ayylmaoooooo"));
-        while (true) {
-            Thread.sleep(1000.msecs);
-            sendEvent(EventNewLine("ayylmaoooooo"));
-        // while (!stdin.eof) {
-            // EventNewLine newLine = EventNewLine(this.stream.readln().chomp());
-            // sendEvent(newLine);
+        while (!stdin.eof) {
+            EventNewLine newLine = EventNewLine(this.stream.readln().chomp());
+            sendEvent(newLine);
         }
     }
 

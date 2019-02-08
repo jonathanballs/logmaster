@@ -25,11 +25,21 @@ class LazyTreeView : Layout {
         this.setSize(100, rowHeight * cast(uint) this.backend.opDollar());
         this.addOnSizeAllocate(&this.onSizeAllocate);
         this.addOnDraw(&this.onDraw);
+
+
+        // Redraw on new lines
+        this.backend.onNewLines.connect(() {
+            this.setSize(100, rowHeight * cast(uint) this.backend.opDollar());
+            this.queueDraw();
+        });
     }
 
     void onSizeAllocate(GtkAllocation* allocation, Widget widget) {
         this.allocatedWidth = allocation.width;
         this.allocatedHeight = allocation.height;
+    }
+
+    void onNewLines() {
     }
 
     bool onDraw(Scoped!Context c, Widget w) {

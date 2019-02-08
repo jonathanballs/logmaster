@@ -32,11 +32,6 @@ class LogViewer : ScrolledWindow {
         this.backend = backend;
         this.progressBar = new ProgressBar();
 
-        // Handle slots
-        this.backend.onNewLines.connect(() {
-            this.queueDraw();
-        });
-
         /*
          * Set the progress bar
          */
