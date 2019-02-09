@@ -120,10 +120,11 @@ class LogmasterWindow : MainWindow {
                 break;
             case Keysyms.GDK_k:
                 if (this.commandLauncher) break;
-                this.commandLauncher = new CommandLauncher(this);
-                // TODO: Figure out how to do this from command line
+                this.commandLauncher = new CommandLauncher(this, (string x) {
+                    this.commandLauncher.destroy();
+                    writeln(x);
+                });
                 this.addTickCallback(&commandLauncher.checkPid);
-                this.commandLauncher.showAll();
                 break;
             default:
                 break;

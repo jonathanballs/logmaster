@@ -4,9 +4,11 @@ import std.process;
 import std.array;
 import std.parallelism;
 import std.json;
+import std.stdio;
 
 import gdk.FrameClock;
 import gtk.CellRendererText;
+import gtk.Dialog;
 import gtk.EditableIF;
 import gtk.HeaderBar;
 import gtk.ListStore;
@@ -25,7 +27,9 @@ import gobject.Value;
 import gdk.Keysyms;
 import gdk.Keymap;
 
-class CommandLauncher : Window {
+alias callback_t = void delegate(string);
+
+class CommandLauncher : Dialog {
     HeaderBar headerBar;
     SearchEntry searchEntry;
     Spinner spinner;
@@ -37,10 +41,16 @@ class CommandLauncher : Window {
     TreeModelFilter treeModelFilter;
     TreeIter[] iters;
 
+    callback_t callback;
+
+    Window parent;
     static string filterString;
 
-    this(Window parent) {
-        super("");
+    this(Window parent, callback_t dlg) {
+        super();
+        this.parent = parent;
+        this.callback = dlg;
+
         /**
          * Set position
          */
@@ -58,6 +68,7 @@ class CommandLauncher : Window {
         this.searchEntry.setSizeRequest(600, -1);
         this.searchEntry.activate();
         this.searchEntry.addOnChanged((EditableIF) {
+            if (!this.treeModelFilter) return;
             this.filterString = searchEntry.getText();
             this.treeModelFilter.refilter();
 
@@ -81,7 +92,7 @@ class CommandLauncher : Window {
         spinner.start();
         spinner.setMarginTop(15);
         spinner.setMarginBottom(15);
-        this.add(spinner);
+        this.getContentArea().add(spinner);
 
         /**
          * Fetch the list of kubernetes pods
@@ -92,7 +103,9 @@ class CommandLauncher : Window {
         /**
          * Handle key presses
          */
+        this.addTickCallback(&this.checkPid);
         this.addOnKeyPress(&this.onKeyPress);
+        this.showAll();
     }
 
     bool onKeyPress(GdkEventKey* g, Widget w) {
@@ -100,9 +113,10 @@ class CommandLauncher : Window {
         switch(g.keyval) {
         // Open file dialog
         case Keysyms.GDK_Return:
-            import std.stdio;
             TreeIter iter = this.treeView.getSelectedIter();
-            writeln(treeModelFilter.getValue(iter, 0).getString());
+            if (iter) {
+                callback(treeModelFilter.getValue(iter, 0).getString());
+            }
             return true;
         default:
             return false;
@@ -112,7 +126,6 @@ class CommandLauncher : Window {
 
 
     bool checkPid(Widget w, FrameClock f) {
-        import std.stdio;
         if (this.kubectl.done) {
             // Fill in the list of pods
             string[] podNames;
@@ -142,15 +155,16 @@ class CommandLauncher : Window {
                 "Pod Name", new CellRendererText(), "text", 0);
             treeView.appendColumn(column);
             scrolledWindow = new ScrolledWindow();
+            scrolledWindow.setVexpand(true);
             scrolledWindow.add(this.treeView);
 
             // Selection
             auto selection = treeView.getSelection();
             selection.selectPath(new TreePath(true));
 
-            this.remove(this.spinner);
-            this.add(scrolledWindow);
-            this.showAll();
+            this.getContentArea().remove(this.spinner);
+            this.getContentArea().add(scrolledWindow);
+            this.getContentArea().showAll();
 
             return false;
         }
@@ -161,7 +175,6 @@ class CommandLauncher : Window {
         TreeModel model = new TreeModel(m);
         TreeIter  iter  = new TreeIter(i);
         string name = model.getValue(iter, 0).getString();
-        import std.stdio;
         import std.algorithm : canFind;
         return name.canFind(this.filterString);
     }
