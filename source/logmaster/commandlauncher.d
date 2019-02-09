@@ -16,11 +16,14 @@ import gtk.Spinner;
 import gtk.TreeIter;
 import gtk.TreeModel;
 import gtk.TreeModelFilter;
+import gtk.TreePath;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.Window;
 import gobject.Value;
+import gdk.Keysyms;
+import gdk.Keymap;
 
 class CommandLauncher : Window {
     HeaderBar headerBar;
@@ -57,6 +60,10 @@ class CommandLauncher : Window {
         this.searchEntry.addOnChanged((EditableIF) {
             this.filterString = searchEntry.getText();
             this.treeModelFilter.refilter();
+
+            // Reselect the first row
+            auto selection = treeView.getSelection();
+            selection.selectPath(new TreePath(true));
         });
 
         /**
@@ -81,7 +88,28 @@ class CommandLauncher : Window {
          */
         this.kubectl = task!execute("kubectl get pods -o json".split(' '));
         this.kubectl.executeInNewThread();
+
+        /**
+         * Handle key presses
+         */
+        this.addOnKeyPress(&this.onKeyPress);
     }
+
+    bool onKeyPress(GdkEventKey* g, Widget w) {
+
+        switch(g.keyval) {
+        // Open file dialog
+        case Keysyms.GDK_Return:
+            import std.stdio;
+            TreeIter iter = this.treeView.getSelectedIter();
+            writeln(treeModelFilter.getValue(iter, 0).getString());
+            return true;
+        default:
+            return false;
+        }
+    }
+
+
 
     bool checkPid(Widget w, FrameClock f) {
         import std.stdio;
@@ -115,6 +143,10 @@ class CommandLauncher : Window {
             treeView.appendColumn(column);
             scrolledWindow = new ScrolledWindow();
             scrolledWindow.add(this.treeView);
+
+            // Selection
+            auto selection = treeView.getSelection();
+            selection.selectPath(new TreePath(true));
 
             this.remove(this.spinner);
             this.add(scrolledWindow);
