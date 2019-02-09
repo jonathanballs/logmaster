@@ -26,15 +26,6 @@ class UnixStreamBackend : StreamBackend {
         this.indexingPercentage = 1.0;
     }
 
-    override void handleEvent(Variant v) {
-        if (v.type == typeid(EventNewLine)) {
-            auto e = v.get!EventNewLine;
-            cache ~= e.newLine;
-
-            this.onNewLines.emit();
-        }
-    }
-
     override void spawnIndexingThread() {
         this.tid = spawn((shared File* stream, BackendID backendID) {
             try {

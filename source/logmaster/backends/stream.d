@@ -23,6 +23,14 @@ abstract class StreamBackend : LoggingBackend {
         this.indexingPercentage = 1.0;
     }
 
+    override void handleEvent(Variant v) {
+        if (v.type == typeid(EventNewLine)) {
+            auto e = v.get!EventNewLine;
+            cache ~= e.newLine;
+            this.onNewLines.emit();
+        }
+    }
+
     override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
     override ulong opDollar() { return cache.length; }
     override ulong start() { return 0; }

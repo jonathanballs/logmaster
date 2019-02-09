@@ -120,9 +120,12 @@ class LogmasterWindow : MainWindow {
                 break;
             case Keysyms.GDK_k:
                 if (this.commandLauncher) break;
-                this.commandLauncher = new CommandLauncher(this, (string x) {
+                this.commandLauncher = new CommandLauncher(this, (string podName) {
                     this.commandLauncher.destroy();
-                    writeln(x);
+                    import logmaster.backends.subprocess;
+                    auto backend = new SubprocessBackend(
+                        ["kubectl", "logs", podName], podName);
+                    this.addBackend(backend);
                 });
                 this.addTickCallback(&commandLauncher.checkPid);
                 break;
