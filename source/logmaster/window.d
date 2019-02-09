@@ -29,6 +29,7 @@ import logmaster.constants;
 import logmaster.logviewer;
 import logmaster.backend;
 import logmaster.backendevents;
+import logmaster.commandlauncher;
 
 
 /// GtkMainWindow subclass for Logmaster
@@ -38,6 +39,8 @@ class LogmasterWindow : MainWindow {
 
     Notebook notebook;
     HeaderBar headerBar;
+    CommandLauncher commandLauncher;
+
 
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
@@ -115,6 +118,13 @@ class LogmasterWindow : MainWindow {
                     notebook.setCurrentPage(prevPageNumber);
                 }
                 break;
+            case Keysyms.GDK_k:
+                if (this.commandLauncher) break;
+                this.commandLauncher = new CommandLauncher(this);
+                // TODO: Figure out how to do this from command line
+                this.addTickCallback(&commandLauncher.checkPid);
+                this.commandLauncher.showAll();
+                break;
             default:
                 break;
             }
@@ -137,7 +147,6 @@ class LogmasterWindow : MainWindow {
     }
 
     bool receiveBackendEvents(Widget w, FrameClock f) {
-
         // Don't receive events if backends haven't been created
         if (this.backends.length == 0) {
             return true;
@@ -149,28 +158,6 @@ class LogmasterWindow : MainWindow {
                 auto e = cast(BackendEvent) event;
                 logViewer.handleEvent(e.payload);
             }
-            // (shared BeventNewLogLines event) {
-            //     auto logViewer = this.logViewers[event.backendId];
-            //     // TreeIter iter = logViewer.listStore.createIter();
-            //     // logViewer.listStore.setValue(iter, 0, event.line);
-            // },
-            // (shared BeventException event) {
-            //     auto logViewer = this.logViewers[event.backendId];
-            //     writeln(cast(Exception)event.e);
-
-            //     import gtk.MessageDialog;
-            //     auto dialog = new MessageDialog(this,
-            //         GtkDialogFlags.DESTROY_WITH_PARENT,
-            //         GtkMessageType.ERROR,
-            //         GtkButtonsType.OK,
-            //         format!("An Exception occured on backend thread %d (%s). A "
-            //             ~ "stack trace is available in the console and the logs.")
-            //             (event.backendId, backends[event.backendId].longTitle)
-            //         );
-            //     dialog.run();
-            //     dialog.destroy();
-            //     removeBackend(event.backendId);
-            // }
         )) {}
 
         return true;
