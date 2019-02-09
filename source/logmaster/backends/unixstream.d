@@ -9,15 +9,15 @@ import core.thread;
 import core.time;
 
 import logmaster.backend;
+import logmaster.backends.stream;
 import logmaster.backendevents;
 
 struct EventNewLine {
     string newLine;
 }
 
-class UnixStreamBackend : LoggingBackend {
+class UnixStreamBackend : StreamBackend {
     File stream;
-    string[] cache;
     Tid tid;
 
     this(File stream, string title = "Unix Stream") {
@@ -25,11 +25,6 @@ class UnixStreamBackend : LoggingBackend {
         this.stream = stream;
         this.indexingPercentage = 1.0;
     }
-
-    override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
-    override ulong opDollar() { return cache.length; }
-    override ulong start() { return 0; }
-    override ulong end() { return cache.length-1; }
 
     override void handleEvent(Variant v) {
         if (v.type == typeid(EventNewLine)) {
