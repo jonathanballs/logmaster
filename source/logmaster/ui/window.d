@@ -4,6 +4,7 @@ import std.concurrency;
 import std.format;
 import std.stdio;
 import core.thread;
+import core.time;
 
 import gtk.Button;
 import gtk.CellRendererText;
@@ -159,7 +160,9 @@ class LogmasterWindow : MainWindow {
             return true;
         }
 
-        while(receiveTimeout(-1.msecs,
+        // Receive events for up to 50ms
+        auto startTime = MonoTime.currTime;
+        while((MonoTime.currTime - startTime) < 50.msecs && receiveTimeout(-1.msecs,
             (BackendEvent event) {
                 LogViewer logViewer = this.logViewers[event.backendID];
                 auto e = cast(BackendEvent) event;
