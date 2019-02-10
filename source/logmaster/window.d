@@ -41,7 +41,6 @@ class LogmasterWindow : MainWindow {
     HeaderBar headerBar;
     CommandLauncher commandLauncher;
 
-
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
         // Initialise
@@ -228,9 +227,12 @@ class LogmasterWindow : MainWindow {
         button.setRelief(GtkReliefStyle.NONE);
         button.setImage(image);
 
+        label.setHexpand(true);
+        label.setEllipsize(PangoEllipsizeMode.END);
         auto hbox = new HBox(false, 5);
         hbox.packStart(label, true, true, 0);
         hbox.packEnd(button, false, true, 0);
+        hbox.setSizeRequest(180, -1);
 
         auto pageNum = this.notebook.appendPage(logViewer, hbox);
         hbox.showAll();
