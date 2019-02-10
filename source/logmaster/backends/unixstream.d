@@ -12,10 +12,6 @@ import logmaster.backend;
 import logmaster.backends.stream;
 import logmaster.backendevents;
 
-struct EventNewLine {
-    string newLine;
-}
-
 class UnixStreamBackend : StreamBackend {
     File stream;
     Tid tid;
