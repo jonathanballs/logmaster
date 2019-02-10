@@ -75,6 +75,7 @@ class FileBackend : LoggingBackend {
             this.indexingPercentage = e.progressPercentage;
             this.onIndexingProgress.emit(this.indexingPercentage);
             this._lines.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
+            this.onNewLines.emit();
         } else {
             import std.stdio : writeln;
             writeln("ERR: can't handle this event");
