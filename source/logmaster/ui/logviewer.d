@@ -72,6 +72,9 @@ class LogViewer : ScrolledWindow {
         }
     }
 
+    /**
+     * Returns a layout that can be used to display the log
+     */
     private Layout createLayout() {
         auto layout = new Layout(null, null);
         layout.setSize(100, rowHeight * cast(uint) this.backend.lines.length);
@@ -117,7 +120,6 @@ class LogViewer : ScrolledWindow {
     }
 
     void handleEvent(Variant v) {
-        // Pass event on
         this.backend.handleEvent(v);
     }
 }

@@ -40,7 +40,7 @@ int main(string[] args)
             auto stdinShortName = stdinName.split(' ')[0];
             // window.addBackend(new UnixStreamBackend(stdin, stdinShortName, stdinName));
         } else {
-            // window.addBackend(new FileBackend(filename));
+            window.addBackend(new FileBackend(filename));
         }
     }
 
@@ -52,11 +52,10 @@ int main(string[] args)
 
     // Open these automatically during development just to be quick
     debug {
-        // if (!opts.files.canFind(["-"])) {
-        //     window.addBackend(new UnixStreamBackend(stdin, "stdin"));
-        // }
+        if (opts.files.canFind(["-"])) {
+            window.addBackend(new UnixStreamBackend(stdin, "stdin"));
+        }
         window.addBackend(new FileBackend("/var/log/pacman.log"));
-        window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         // window.addBackend(new FileBackend("/home/jonathan/examplelogs/biglog.json"));
     }
 

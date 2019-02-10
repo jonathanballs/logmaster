@@ -126,6 +126,10 @@ class LogmasterWindow : MainWindow {
                         ["kubectl", "logs", podName], podName);
                     this.addBackend(backend);
                 });
+
+                this.commandLauncher.addOnDestroy((Widget w) {
+                    this.commandLauncher = null;
+                });
                 this.addTickCallback(&commandLauncher.checkPid);
                 break;
             default:
