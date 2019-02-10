@@ -63,37 +63,3 @@ abstract class LoggingBackend {
     void handleEvent(Variant v);
 
 }
-
-// Log interface where logs are just streamed to the cache. There is no source
-// of truth that can be queried. Everything is cached and the cache is queried
-// for data. Probably the simplest to implement. Cache may need to become more
-// advanced (i.e. cache to disk or smth). Everything will be indexed as it
-// arrives. Should be implementable with a single overriden method per class?
-// Superclass for: ptrace, stdin, subprocess
-abstract class StreamedLog : LoggingBackend {
-
-    this(string shortTitle, string longTitle) {
-        super(shortTitle, longTitle);
-    }
-
-    // Cache of all log data in order
-    protected ubyte[] cache;
-    protected ulong[] lineOffsets;
-
-    // Blocking. Returns data as it arrives.
-    private InputRange!(ubyte[]) byChunk();
-}
-
-// A log which already exists and must be analysed. Much more complex because
-// the user may want to explore log before it has finished. Once indexed, it
-// behaves like a normal log. This log must be able to provide head and tail for
-// when it has not fully be indexed. File, Kubernetes
-abstract class ExternalLogBackend : LoggingBackend {
-
-    this(string shortTitle, string longTitle) {
-        super(shortTitle, longTitle);
-    }
-    // Return tail (final lines)... How does this work for 
-    string[] tail(ulong numLines);
-    string[] head(ulong numLines);
-}
