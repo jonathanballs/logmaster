@@ -11,7 +11,7 @@ import std.stdio;
 import gtk.Main;
 import gtk.Widget;
 
-import logmaster.window;
+import logmaster.ui.window;
 import logmaster.backends.file;
 import logmaster.backends.unixstream;
 

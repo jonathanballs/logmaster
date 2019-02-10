@@ -56,8 +56,7 @@ class FileBackend : LoggingBackend {
     FileLogLines _lines;
     string filename;
 
-    this(string filePath)
-    {
+    this(string filePath) {
         super(filePath, baseName(filePath));
         filename = filePath;
         this._lines = new FileLogLines(filename);

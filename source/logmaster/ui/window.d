@@ -1,4 +1,4 @@
-module logmaster.window;
+module logmaster.ui.window;
 
 import std.concurrency;
 import std.format;
