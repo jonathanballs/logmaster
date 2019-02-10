@@ -14,6 +14,12 @@ private static BackendID availableID = 0;
 
 alias LogLine = Tuple!(ulong, "lineID", string, "message");
 
+class LogLines {
+    LogLine opIndex(long i) { return LogLine(0, "hello"); }
+    ulong opDollar() { return this.length; }
+    ulong length() { return 0; }
+}
+
 // NB: LoggingBackend should be fine for general lookup (if isIndexed is true)
 // Many log types will have special features (which is good) but those features
 // should be implemented by sub interfaces or classes. This is a data processing
@@ -24,9 +30,6 @@ abstract class LoggingBackend {
     string shortTitle;
     string longTitle;
     BackendID id;
-
-    Signal!() onNewLines = new Signal!();
-    Signal!(float) onIndexingProgress = new Signal!(float);
 
     /**
      * Create a new instance of logging backend.
@@ -41,10 +44,10 @@ abstract class LoggingBackend {
     /// available (i.e for unknown log sizes) Will be 100.0 if complete
     float indexingPercentage = 0.0;
 
-    // Log array indexing and slicing.
-    LogLine opIndex(long i);
-    // InputRange!string opSlice(long i, long j);
-    ulong opDollar();
+    Signal!() onNewLines = new Signal!();
+    Signal!(float) onIndexingProgress = new Signal!(float);
+
+    LogLines lines();
 
     // First log id. Depending on implementation, may not be zero. Useful for
     // going to the start of the log. E.g. for kubernetes, log may start at
@@ -61,5 +64,4 @@ abstract class LoggingBackend {
 
     // Handle a backend event.
     void handleEvent(Variant v);
-
 }

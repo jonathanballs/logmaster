@@ -14,58 +14,14 @@ import core.time;
 import logmaster.backend;
 import logmaster.backendevents;
 
-class FileBackend : LoggingBackend {
-
-    string filename;
+private class FileLogLines : LogLines {
     File f;
-    /**
-     * Create a new instance of a File Log.
-     * Params:
-     *      filePath = Path of the file to open
-     */
-    this(string filePath)
-    {
-        super(filePath, baseName(filePath));
-        filename = filePath;
-    }
-
     ulong[] lineOffsets;
+    string filename;
 
-    // Receive events from the frontend
-    protected void receiveEvents() {
-        while (receiveTimeout(-1.msecs, (Variant v) {
-                writeln("Received event ", v);
-            })) {}
-    }
+    this(string filename) { this.filename = filename; }
 
-    override ulong opDollar() {
-        return lineOffsets.length;
-    }
-
-    override ulong start() {
-        return 0;
-    }
-
-    override ulong end() {
-        return lineOffsets.length - 1;
-    }
-
-    override void handleEvent(Variant v) {
-        if (v.type == typeid(EventIndexingProgress)) {
-            auto e = v.get!EventIndexingProgress;
-            this.indexingPercentage = e.progressPercentage;
-            this.onIndexingProgress.emit(this.indexingPercentage);
-            this.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
-        } else {
-            import std.stdio : writeln;
-            writeln("ERR: can't handle this event");
-        }
-    }
-
-    // Return log line istruct IndexingProgress {
-    /// Float between 0 and 100
-    float progressPercentage;
-
+    override ulong opDollar() { return lineOffsets.length; }
     override LogLine opIndex(long i) {
         if (!f.isOpen()) {
             f.open(this.filename);
@@ -74,7 +30,7 @@ class FileBackend : LoggingBackend {
         long startOffset = lineOffsets[i];
         long endOffset;
 
-        if (i+1 < end()) {
+        if (i+1 < length()-1) {
             endOffset = lineOffsets[i + 1] - 1;
         } else {
             endOffset = f.size();
@@ -92,6 +48,37 @@ class FileBackend : LoggingBackend {
         f.seek(startOffset);
         auto data = f.rawRead(buffer);
         return LogLine(i, data.assumeUTF);
+    }
+    override ulong length() { return lineOffsets.length; }
+}
+
+class FileBackend : LoggingBackend {
+    FileLogLines _lines;
+    string filename;
+
+    this(string filePath)
+    {
+        super(filePath, baseName(filePath));
+        filename = filePath;
+        this._lines = new FileLogLines(filename);
+    }
+
+    override ulong start() { return 0; }
+    override ulong end() { return lines.length - 1; }
+    override LogLines lines() {
+        return _lines;
+    }
+
+    override void handleEvent(Variant v) {
+        if (v.type == typeid(EventIndexingProgress)) {
+            auto e = v.get!EventIndexingProgress;
+            this.indexingPercentage = e.progressPercentage;
+            this.onIndexingProgress.emit(this.indexingPercentage);
+            this._lines.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
+        } else {
+            import std.stdio : writeln;
+            writeln("ERR: can't handle this event");
+        }
     }
 
     private Tid tid;

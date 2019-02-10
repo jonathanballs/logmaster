@@ -15,24 +15,33 @@ struct EventNewLine {
     string newLine;
 }
 
-abstract class StreamBackend : LoggingBackend {
+private class StreamLogLines : LogLines {
     string[] cache;
+    override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
+    override ulong length() { return cache.length; }
+}
+
+abstract class StreamBackend : LoggingBackend {
+    private StreamLogLines _lines;
 
     this(string longTitle, string shortTitle) {
         super(longTitle, shortTitle);
         this.indexingPercentage = 1.0;
+        this._lines = new StreamLogLines();
+    }
+
+    override LogLines lines() {
+        return _lines;
     }
 
     override void handleEvent(Variant v) {
         if (v.type == typeid(EventNewLine)) {
             auto e = v.get!EventNewLine;
-            cache ~= e.newLine;
+            this._lines.cache ~= e.newLine;
             this.onNewLines.emit();
         }
     }
 
-    override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
-    override ulong opDollar() { return cache.length; }
     override ulong start() { return 0; }
-    override ulong end() { return cache.length-1; }
+    override ulong end() { return lines.length-1; }
 }

@@ -22,13 +22,13 @@ class LazyBackendView : Layout {
     public this(LoggingBackend backend) {
         super(null, null);
         this.backend = backend;
-        this.setSize(100, rowHeight * cast(uint) this.backend.opDollar());
+        this.setSize(100, rowHeight * cast(uint) this.backend.lines.length);
         this.addOnSizeAllocate(&this.onSizeAllocate);
         this.addOnDraw(&this.onDraw);
 
         // Redraw on new lines
         this.backend.onNewLines.connect(() {
-            this.setSize(100, rowHeight * cast(uint) this.backend.opDollar());
+            this.setSize(100, rowHeight * cast(uint) this.backend.lines.length);
             this.queueDraw();
         });
     }
@@ -46,12 +46,12 @@ class LazyBackendView : Layout {
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        if (backend.opDollar() == 0) return true;
+        if (backend.lines.length == 0) return true;
 
         foreach (i; 0..(allocatedHeight / rowHeight) + 2) {
             if (firstLineNumber + i > backend.end()) break;
 
-            string message = backend[firstLineNumber + i].message;
+            string message = backend.lines[firstLineNumber + i].message;
             uint y = firstLineY + i*rowHeight;
             GdkRectangle rect = GdkRectangle(0, y,
                 this.allocatedWidth, this.rowHeight);
