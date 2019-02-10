@@ -75,8 +75,9 @@ class CommandLauncher : Dialog {
         this.searchEntry.setSizeRequest(600, -1);
         this.searchEntry.activate();
         this.searchEntry.addOnChanged((EditableIF) {
-            if (!this.treeModelFilter) return;
             this.filterString = searchEntry.getText();
+
+            if (!this.treeModelFilter) return;
             this.treeModelFilter.refilter();
 
             // Reselect the first row
@@ -157,6 +158,7 @@ class CommandLauncher : Dialog {
             // Filter
             this.treeModelFilter = new TreeModelFilter(listStore, null);
             this.treeModelFilter.setVisibleFunc(&filterTree, &this.filterString, null);
+            this.treeModelFilter.refilter();
 
             // Create the tree view
             this.treeView = new TreeView();
