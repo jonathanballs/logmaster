@@ -83,7 +83,6 @@ class CommandLauncher : Dialog {
             // Reselect the first row
             auto selection = treeView.getSelection();
             selection.selectPath(new TreePath(true));
-
         });
 
         /**
@@ -129,6 +128,20 @@ class CommandLauncher : Dialog {
         case Keysyms.GDK_Escape:
             this.destroy();
             return true;
+        case Keysyms.GDK_Down:
+            if (!this.treeModelFilter) return false;
+            TreeIter selectedIter = this.treeView.getSelection().getSelected();
+            if (treeModelFilter.iterNext(selectedIter)) {
+                this.treeView.getSelection().selectIter(selectedIter);
+            }
+            return true;
+        case Keysyms.GDK_Up:
+            if (!this.treeModelFilter) return false;
+            TreeIter selectedIter = this.treeView.getSelection().getSelected();
+            if (treeModelFilter.iterPrevious(selectedIter)) {
+                this.treeView.getSelection().selectIter(selectedIter);
+            }
+            return true;
         default:
             return false;
         }
@@ -165,7 +178,11 @@ class CommandLauncher : Dialog {
             treeView.setModel(treeModelFilter);
             treeView.setHeadersVisible(false);
             this.treeView.getSelection.addOnChanged((TreeSelection s) {
-                this.treeView.scrollToCell(new TreePath(true), null, true, 0, 0);
+                auto selectedIter = this.treeView.getSelectedIter();
+                if (selectedIter) {
+                    auto selectedPath = treeModelFilter.getPath(selectedIter);
+                    this.treeView.scrollToCell(selectedPath, null, false, 0, 0);
+                }
             });
 
             auto column = new TreeViewColumn(
@@ -183,6 +200,8 @@ class CommandLauncher : Dialog {
             this.getContentArea().add(scrolledWindow);
             this.getContentArea().showAll();
 
+            // Scroll to top
+            this.treeView.scrollToCell(new TreePath(true), null, true, 0, 0);
             return false;
         }
         return true;
