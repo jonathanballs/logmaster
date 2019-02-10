@@ -19,6 +19,7 @@ import gtk.TreeIter;
 import gtk.TreeModel;
 import gtk.TreeModelFilter;
 import gtk.TreePath;
+import gtk.TreeSelection;
 import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.Widget;
@@ -81,6 +82,7 @@ class CommandLauncher : Dialog {
             // Reselect the first row
             auto selection = treeView.getSelection();
             selection.selectPath(new TreePath(true));
+
         });
 
         /**
@@ -160,6 +162,9 @@ class CommandLauncher : Dialog {
             this.treeView = new TreeView();
             treeView.setModel(treeModelFilter);
             treeView.setHeadersVisible(false);
+            this.treeView.getSelection.addOnChanged((TreeSelection s) {
+                this.treeView.scrollToCell(new TreePath(true), null, true, 0, 0);
+            });
 
             auto column = new TreeViewColumn(
                 "Pod Name", new CellRendererText(), "text", 0);
