@@ -118,6 +118,7 @@ class LogmasterWindow : MainWindow {
                 }
                 break;
             case Keysyms.GDK_k:
+                static uint callbackId;
                 if (this.commandLauncher) break;
                 this.commandLauncher = new CommandLauncher(this, (string podName) {
                     this.commandLauncher.destroy();
@@ -126,11 +127,10 @@ class LogmasterWindow : MainWindow {
                         ["kubectl", "logs", podName], podName);
                     this.addBackend(backend);
                 });
-
+                this.addTickCallback(&commandLauncher.checkPid);
                 this.commandLauncher.addOnDestroy((Widget w) {
                     this.commandLauncher = null;
                 });
-                this.addTickCallback(&commandLauncher.checkPid);
                 break;
             default:
                 break;

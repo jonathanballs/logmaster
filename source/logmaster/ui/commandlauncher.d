@@ -44,10 +44,16 @@ class CommandLauncher : Dialog {
     callback_t callback;
 
     Window parent;
-    static string filterString;
+    string filterString;
+
+    bool destroyed = false;
 
     this(Window parent, callback_t dlg) {
         super();
+        this.addOnDestroy((Widget w) {
+            this.destroyed = true;
+        });
+
         this.parent = parent;
         this.callback = dlg;
 
@@ -58,7 +64,7 @@ class CommandLauncher : Dialog {
         this.setPosition(GtkWindowPosition.CENTER_ON_PARENT);
         this.setTypeHint(GdkWindowTypeHint.DIALOG);
         this.setModal(true);
-        this.setSizeRequest(600, 200);
+        this.setSizeRequest(600, 300);
 
         /**
          * Create search entry
@@ -109,7 +115,6 @@ class CommandLauncher : Dialog {
     }
 
     bool onKeyPress(GdkEventKey* g, Widget w) {
-
         switch(g.keyval) {
         // Open file dialog
         case Keysyms.GDK_Return:
@@ -117,6 +122,9 @@ class CommandLauncher : Dialog {
             if (iter) {
                 callback(treeModelFilter.getValue(iter, 0).getString());
             }
+            return true;
+        case Keysyms.GDK_Escape:
+            this.destroy();
             return true;
         default:
             return false;
@@ -126,6 +134,8 @@ class CommandLauncher : Dialog {
 
 
     bool checkPid(Widget w, FrameClock f) {
+        if (destroyed) return false;
+
         if (this.kubectl.done) {
             // Fill in the list of pods
             string[] podNames;
@@ -144,7 +154,7 @@ class CommandLauncher : Dialog {
 
             // Filter
             this.treeModelFilter = new TreeModelFilter(listStore, null);
-            this.treeModelFilter.setVisibleFunc(&filterTree, null, null);
+            this.treeModelFilter.setVisibleFunc(&filterTree, &this.filterString, null);
 
             // Create the tree view
             this.treeView = new TreeView();
@@ -176,6 +186,6 @@ class CommandLauncher : Dialog {
         TreeIter  iter  = new TreeIter(i);
         string name = model.getValue(iter, 0).getString();
         import std.algorithm : canFind;
-        return name.canFind(this.filterString);
+        return name.canFind(*cast(string*) data);
     }
 }
