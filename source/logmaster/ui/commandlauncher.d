@@ -1,4 +1,4 @@
-module logmaster.commandlauncher;
+module logmaster.ui.commandlauncher;
 
 import std.process;
 import std.array;

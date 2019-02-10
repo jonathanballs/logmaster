@@ -1,4 +1,4 @@
-module logmaster.logviewer;
+module logmaster.ui.logviewer;
 
 import std.concurrency;
 import std.variant;
@@ -12,7 +12,7 @@ import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.ProgressBar;
 
-import logmaster.lazybackendview;
+import logmaster.ui.lazybackendview;
 import logmaster.backend;
 import logmaster.backendevents;
 

@@ -26,10 +26,10 @@ import gdk.Keysyms;
 import glib.Timeout;
 
 import logmaster.constants;
-import logmaster.logviewer;
 import logmaster.backend;
 import logmaster.backendevents;
-import logmaster.commandlauncher;
+import logmaster.ui.logviewer;
+import logmaster.ui.commandlauncher;
 
 
 /// GtkMainWindow subclass for Logmaster

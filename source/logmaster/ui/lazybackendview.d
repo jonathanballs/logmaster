@@ -1,4 +1,4 @@
-module logmaster.lazybackendview;
+module logmaster.ui.lazybackendview;
 
 import std.stdio;
 import std.conv;
