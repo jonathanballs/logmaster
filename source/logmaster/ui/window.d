@@ -94,12 +94,18 @@ class LogmasterWindow : MainWindow {
             // Close current tab/window
             case Keysyms.GDK_w:
                 if (notebook.getNPages() == 0) {
-                    writeln("Exit the program");
+                    this.destroy();
+                    break;
                 } else {
                     auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
                     this.removeBackend(currentPage.backend.id);
                 }
                 break;
+            // Quit the program
+            case Keysyms.GDK_q:
+                    this.destroy();
+                    break;
+
             // Cycle tabs
             case Keysyms.GDK_Tab:
                 auto nextPageNumber = notebook.getCurrentPage() + 1;
@@ -125,7 +131,7 @@ class LogmasterWindow : MainWindow {
                     this.commandLauncher.destroy();
                     import logmaster.backends.subprocess;
                     auto backend = new SubprocessBackend(
-                        ["kubectl", "logs", podName], podName);
+                        ["kubectl", "logs", "-f", podName], podName);
                     this.addBackend(backend);
                 });
                 this.addTickCallback(&commandLauncher.checkPid);
