@@ -4,37 +4,41 @@ import std.concurrency;
 import std.variant;
 import std.stdio;
 import core.thread;
+
+import cairo.Context;
 import gdk.FrameClock;
+import gdk.Rectangle;
+import gtk.Adjustment;
 import gtk.Alignment;
+import gtk.Box;
 import gtk.CellRendererText;
+import gtk.CellRendererText;
+import gtk.Layout;
+import gtk.ProgressBar;
 import gtk.ScrolledWindow;
 import gtk.TreeIter;
 import gtk.TreeViewColumn;
 import gtk.Widget;
-import gtk.ProgressBar;
-import cairo.Context;
-import gdk.Rectangle;
-import gtk.Adjustment;
-import gtk.CellRendererText;
-import gtk.Layout;
 import gtk.Widget;
 
 import logmaster.backend;
 import logmaster.backendevents;
 
-class LogViewer : ScrolledWindow {
+class LogViewer : Box {
     // Meta
     LoggingBackend backend;
 
     // Loading progress
     Alignment progressAlignment;
     ProgressBar progressBar;
+    ScrolledWindow scrolledWindow;
 
     // Log view
     Layout layout;
     private enum rowHeight = 20;
 
     this(LoggingBackend backend) {
+        super(GtkOrientation.VERTICAL, 20);
         this.backend = backend;
         this.backend.onNewLines.connect(() {
             if (this.layout) {
@@ -47,7 +51,10 @@ class LogViewer : ScrolledWindow {
         // loading counter.
         if (backend.indexingPercentage == 1.0) {
             this.layout = createLayout();
-            this.add(layout);
+            this.scrolledWindow = new ScrolledWindow();
+            this.scrolledWindow.add(layout);
+            this.packStart(scrolledWindow, true, true, 0);
+            this.showAll();
         } else {
             this.progressBar = new ProgressBar();
             /*
@@ -66,7 +73,10 @@ class LogViewer : ScrolledWindow {
                     if (this.layout) return;
                     this.removeAll();
                     this.layout = createLayout();
-                    this.add(layout);
+                    this.scrolledWindow = new ScrolledWindow();
+                    this.scrolledWindow.add(layout);
+                    this.packStart(scrolledWindow, true, true, 0);
+                    this.showAll();
                 }
             });
         }

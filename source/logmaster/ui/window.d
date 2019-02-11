@@ -87,6 +87,9 @@ class LogmasterWindow : MainWindow {
         // If CTRL key pressed
         if (g.state & ModifierType.CONTROL_MASK) {
             switch(g.keyval) {
+            case Keysyms.GDK_f:
+                writeln("show the search");
+                break;
             // Open file dialog
             case Keysyms.GDK_o:
                 this.onOpenFileClicked(new Button());
@@ -170,6 +173,10 @@ class LogmasterWindow : MainWindow {
         auto startTime = MonoTime.currTime;
         while((MonoTime.currTime - startTime) < 50.msecs && receiveTimeout(-1.msecs,
             (BackendEvent event) {
+                if (event.backendID !in logViewers) {
+                    writeln("ERR: Recieved event for backend that doesn't exist");
+                    return;
+                }
                 LogViewer logViewer = this.logViewers[event.backendID];
                 auto e = cast(BackendEvent) event;
                 logViewer.handleEvent(e.payload);

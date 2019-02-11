@@ -47,7 +47,15 @@ private class FileLogLines : LogLines {
 
         f.seek(startOffset);
         auto data = f.rawRead(buffer);
-        return LogLine(i, data.assumeUTF);
+        import std.utf : validate;
+        try {
+            string s = data.assumeUTF;
+            validate(s);
+            return LogLine(i, s);
+        } catch (Exception e) {
+            writeln("Couldn't parse ", data);
+            return LogLine(i, "");
+        }
     }
     override ulong length() { return lineOffsets.length; }
 
