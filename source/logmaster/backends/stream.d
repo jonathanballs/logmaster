@@ -19,6 +19,14 @@ private class StreamLogLines : LogLines {
     string[] cache;
     override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
     override ulong length() { return cache.length; }
+    override int opApply(int delegate(LogLine) dlg) const {
+        int result = 0;
+        foreach (i, line; cache) {
+            result = dlg(LogLine(i, line));
+            if (result) return result;
+        }
+        return 0;
+    }
 }
 
 abstract class StreamBackend : LoggingBackend {

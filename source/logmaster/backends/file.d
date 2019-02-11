@@ -50,6 +50,15 @@ private class FileLogLines : LogLines {
         return LogLine(i, data.assumeUTF);
     }
     override ulong length() { return lineOffsets.length; }
+
+    override int opApply(int delegate(LogLine) dlg) {
+        int result = 0;
+        foreach (i; 0..length()) {
+            result = dlg(this[i]);
+            if (result) return result;
+        }
+        return 0;
+    }
 }
 
 class FileBackend : LoggingBackend {
