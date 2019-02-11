@@ -120,6 +120,7 @@ class CommandLauncher : Dialog {
         switch(g.keyval) {
         // Open file dialog
         case Keysyms.GDK_Return:
+            if (!this.treeView) return false;
             TreeIter iter = this.treeView.getSelectedIter();
             if (iter) {
                 callback(treeModelFilter.getValue(iter, 0).getString());
