@@ -82,25 +82,21 @@ class LogViewer : Box {
         });
     }
 
-    SearchBar searchBar;
-    Revealer revealer;
+    // Revealer revealer;
     SearchEntry searchEntry;
-    private Revealer constructSearchBar() {
+    SearchBar searchBar;
+    private SearchBar constructSearchBar() {
         searchBar = new SearchBar();
-        revealer = new Revealer();
         searchEntry = new SearchEntry();
-
-        searchEntry.setHexpand(true);
-        revealer.setHexpand(true);
-        revealer.add(searchBar);
+        searchEntry.setSizeRequest(600, -1);
         searchBar.add(searchEntry);
-        searchBar.setSearchMode(true);
-        revealer.setRevealChild(true);
-        return revealer;
+        searchEntry.setHexpand(true);
+
+        return searchBar;
     }
 
     void toggleSearchBar() {
-        revealer.setRevealChild(!revealer.getRevealChild());
+        searchBar.setSearchMode(!searchBar.getSearchMode());
     }
 
     private void packScrolledLayout() {
