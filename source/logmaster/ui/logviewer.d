@@ -64,6 +64,7 @@ class LogViewer : Box {
             progressBar.setHalign(GtkAlign.CENTER);
             progressBar.setValign(GtkAlign.CENTER);
             progressBar.setFraction(this.backend.indexingPercentage);
+            this.packStart(progressBar, true, true, 0);
             this.add(progressBar);
 
             this.backend.onIndexingProgress.connect((float p) {

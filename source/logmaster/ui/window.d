@@ -163,6 +163,10 @@ class LogmasterWindow : MainWindow {
         fileDialog.hide();
     }
 
+    bool toggleSearchBar() {
+        return true;
+    }
+
     bool receiveBackendEvents(Widget w, FrameClock f) {
         // Don't receive events if backends haven't been created
         if (this.backends.length == 0) {
