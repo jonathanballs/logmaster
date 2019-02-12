@@ -88,7 +88,8 @@ class LogmasterWindow : MainWindow {
         if (g.state & ModifierType.CONTROL_MASK) {
             switch(g.keyval) {
             case Keysyms.GDK_f:
-                writeln("show the search");
+                auto logviewer = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
+                logviewer.toggleSearchBar();
                 break;
             // Open file dialog
             case Keysyms.GDK_o:
@@ -106,8 +107,8 @@ class LogmasterWindow : MainWindow {
                 break;
             // Quit the program
             case Keysyms.GDK_q:
-                    this.destroy();
-                    break;
+                this.destroy();
+                break;
 
             // Cycle tabs
             case Keysyms.GDK_Tab:
@@ -128,7 +129,6 @@ class LogmasterWindow : MainWindow {
                 }
                 break;
             case Keysyms.GDK_k:
-                static uint callbackId;
                 if (this.commandLauncher) break;
                 this.commandLauncher = new CommandLauncher(this, (string podName) {
                     this.commandLauncher.destroy();
@@ -163,10 +163,6 @@ class LogmasterWindow : MainWindow {
         fileDialog.hide();
     }
 
-    bool toggleSearchBar() {
-        return true;
-    }
-
     bool receiveBackendEvents(Widget w, FrameClock f) {
         // Don't receive events if backends haven't been created
         if (this.backends.length == 0) {
@@ -181,9 +177,8 @@ class LogmasterWindow : MainWindow {
                     writeln("ERR: Recieved event for backend that doesn't exist");
                     return;
                 }
-                LogViewer logViewer = this.logViewers[event.backendID];
-                auto e = cast(BackendEvent) event;
-                logViewer.handleEvent(e.payload);
+                auto backend = this.backends[event.backendID];
+                backend.handleEvent((cast(BackendEvent) event).payload);
             }
         )) {}
 
