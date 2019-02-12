@@ -83,13 +83,20 @@ class LogmasterWindow : MainWindow {
      * Keyboard Shortcuts
      */
     bool onKeyPress(GdkEventKey* g, Widget w) {
+        auto currentLogViewer = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
+
+        if (currentLogViewer.searchBar.getSearchMode()) {
+            import gdk.Event : Event;
+            GdkEvent* e = cast(GdkEvent*) g;
+            auto event = new Event(e);
+            currentLogViewer.searchEntry.handleEvent(event);
+        }
 
         // If CTRL key pressed
         if (g.state & ModifierType.CONTROL_MASK) {
             switch(g.keyval) {
             case Keysyms.GDK_f:
-                auto logviewer = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
-                logviewer.toggleSearchBar();
+                currentLogViewer.toggleSearchBar();
                 break;
             // Open file dialog
             case Keysyms.GDK_o:
@@ -101,8 +108,7 @@ class LogmasterWindow : MainWindow {
                     this.destroy();
                     break;
                 } else {
-                    auto currentPage = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
-                    this.removeBackend(currentPage.backend.id);
+                    this.removeBackend(currentLogViewer.backend.id);
                 }
                 break;
             // Quit the program

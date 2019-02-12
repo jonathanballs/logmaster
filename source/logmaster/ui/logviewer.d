@@ -76,22 +76,22 @@ class LogViewer : Box {
                 this.remove(progressBar);
                 this.progressBar = null;
                 this.packStart(constructSearchBar(), false, true, 0);
+                this.toggleSearchBar();
                 this.packScrolledLayout();
                 this.showAll();
             }
         });
     }
 
-    // Revealer revealer;
     SearchEntry searchEntry;
     SearchBar searchBar;
     private SearchBar constructSearchBar() {
         searchBar = new SearchBar();
         searchEntry = new SearchEntry();
-        searchEntry.setSizeRequest(600, -1);
         searchBar.add(searchEntry);
+        searchBar.connectEntry(searchEntry);
+        searchEntry.setSizeRequest(500, -1);
         searchEntry.setHexpand(true);
-
         return searchBar;
     }
 
