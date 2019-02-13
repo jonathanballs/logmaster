@@ -79,8 +79,6 @@ class FileBackend : LoggingBackend {
         this._lines = new FileLogLines(filename);
     }
 
-    override ulong start() { return 0; }
-    override ulong end() { return lines.length - 1; }
     override LogLines lines() {
         return _lines;
     }
@@ -130,6 +128,7 @@ private class FileIndexer {
         s.start();
         ulong bufNum;
         f = File(filename);
+        lineOffsets ~= 0;
 
         foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
             auto offset = (bufNum * BUFSIZ); // Index after the nl char

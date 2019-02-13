@@ -20,9 +20,8 @@ private class StreamLogLines : LogLines {
     override LogLine opIndex(long i) { return LogLine(i, cache[i]); }
     override ulong length() { return cache.length; }
     override int opApply(int delegate(LogLine) dlg) const {
-        int result = 0;
         foreach (i, line; cache) {
-            result = dlg(LogLine(i, line));
+            int result = dlg(LogLine(i, line));
             if (result) return result;
         }
         return 0;
@@ -49,7 +48,4 @@ abstract class StreamBackend : LoggingBackend {
             this.onNewLines.emit();
         }
     }
-
-    override ulong start() { return 0; }
-    override ulong end() { return lines.length-1; }
 }

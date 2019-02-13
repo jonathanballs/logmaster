@@ -50,16 +50,6 @@ abstract class LoggingBackend {
 
     LogLines lines();
 
-    // First log id. Depending on implementation, may not be zero. Useful for
-    // going to the start of the log. E.g. for kubernetes, log may start at
-    // negative. TODO: review this: could get kubernetes to start at 1. as tail
-    // functions are running. Don't want to 
-    ulong start();
-
-    // Last log id. Depending on implementation, may be zero. Useful for going
-    // to the end of the log.
-    ulong end();
-
     // Backends should be responsible for managing their own threads.
     void spawnIndexingThread();
 

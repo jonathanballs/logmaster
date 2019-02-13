@@ -26,10 +26,17 @@ import gtk.Widget;
 
 import logmaster.backend;
 import logmaster.backendevents;
+import logmaster.backends.filters.regex;
 
 class LogViewer : Box {
     // Meta
     LoggingBackend backend;
+    BackendRegexFilter filter;
+
+    private LoggingBackend currentView() {
+        if (filter) return filter;
+        return backend;
+    }
 
     // Loading progress
     Alignment progressAlignment;
@@ -45,7 +52,6 @@ class LogViewer : Box {
         this.backend = backend;
         this.backend.onNewLines.connect(() {
             if (this.layout) {
-                this.layout.setSize(100, rowHeight * cast(uint) this.backend.lines.length);
                 this.queueDraw();
             }
         });
@@ -54,6 +60,7 @@ class LogViewer : Box {
          * Pack the scrolled layout.
          */
         if (backend.indexingPercentage == 1.0) {
+            this.packStart(constructSearchBar(), false, true, 0);
             this.packScrolledLayout();
             this.showAll();
             return;
@@ -76,7 +83,6 @@ class LogViewer : Box {
                 this.remove(progressBar);
                 this.progressBar = null;
                 this.packStart(constructSearchBar(), false, true, 0);
-                this.toggleSearchBar();
                 this.packScrolledLayout();
                 this.showAll();
             }
@@ -117,14 +123,16 @@ class LogViewer : Box {
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        if (backend.lines.length == 0) return true;
+        if (currentView.lines.length == 0) return true;
+
+        this.layout.setSize(100, rowHeight * cast(uint) this.currentView.lines.length);
 
         auto viewportSize = this.getLayoutAllocation(layout);
 
         foreach (i; 0..(viewportSize.height / rowHeight) + 2) {
-            if (firstLineNumber + i > backend.end()) break;
+            if (firstLineNumber + i > currentView.lines.length-1) break;
 
-            string message = backend.lines[firstLineNumber + i].message;
+            string message = currentView.lines[firstLineNumber + i].message;
             uint y = firstLineY + i*rowHeight;
 
             GdkRectangle rect = GdkRectangle(0, y,
