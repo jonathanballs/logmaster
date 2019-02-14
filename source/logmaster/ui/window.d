@@ -89,9 +89,6 @@ class LogmasterWindow : MainWindow {
             import gdk.Event : Event;
             GdkEvent* e = cast(GdkEvent*) g;
             auto event = new Event(e);
-            if(currentLogViewer.searchEntry.handleEvent(event)) {
-                return true;
-            }
 
             if (g.keyval == Keysyms.GDK_Return) {
                 string searchString = currentLogViewer.searchEntry.getText();
@@ -101,6 +98,8 @@ class LogmasterWindow : MainWindow {
                 currentLogViewer.filter = filter;
                 writeln(filter.lines.length);
             }
+
+            return currentLogViewer.searchEntry.handleEvent(event);
         }
 
         // If CTRL key pressed
