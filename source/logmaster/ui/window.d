@@ -97,6 +97,9 @@ class LogmasterWindow : MainWindow {
                 currentLogViewer.filter = filter;
             }
 
+            if (g.state & ModifierType.CONTROL_MASK && g.keyval == Keysyms.GDK_f)
+                currentLogViewer.toggleSearchBar();
+
             return currentLogViewer.searchEntry.handleEvent(event);
         }
 

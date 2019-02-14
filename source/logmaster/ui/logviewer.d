@@ -1,8 +1,9 @@
 module logmaster.ui.logviewer;
 
 import std.concurrency;
-import std.variant;
+import std.format;
 import std.stdio;
+import std.variant;
 import core.thread;
 
 import cairo.Context;
@@ -13,16 +14,21 @@ import gtk.Alignment;
 import gtk.Box;
 import gtk.CellRendererText;
 import gtk.CellRendererText;
+import gtk.CssProvider;
 import gtk.Layout;
 import gtk.ProgressBar;
 import gtk.Revealer;
 import gtk.ScrolledWindow;
 import gtk.SearchBar;
 import gtk.SearchEntry;
+import gtk.Statusbar;
+import gtk.StyleContext;
+import gtk.Toolbar;
 import gtk.TreeIter;
 import gtk.TreeViewColumn;
 import gtk.Widget;
 import gtk.Widget;
+import gobject.Value;
 
 import logmaster.backend;
 import logmaster.backendevents;
@@ -45,6 +51,8 @@ class LogViewer : Box {
     // Log view
     ScrolledWindow scrolledWindow;
     Layout layout;
+    Toolbar toolbar;
+    Statusbar statusBar;
     private enum rowHeight = 20;
 
     this(LoggingBackend backend) {
@@ -71,6 +79,22 @@ class LogViewer : Box {
          */
         this.packStart(constructSearchBar(), false, true, 0);
         this.packScrolledLayout();
+        this.scrolledWindow.hide();
+        statusBar = new Statusbar();
+        statusBar.setMarginTop(0);
+        statusBar.setMarginBottom(0);
+        statusBar.setMarginLeft(0);
+        statusBar.setMarginRight(0);
+
+        /**
+         * Create status bar
+         */
+        StyleContext styleContext = statusBar.getStyleContext();
+        CssProvider cssProvider = new CssProvider();
+        cssProvider.loadFromData("statusbar { border-top-width: 1px; border-top-style: solid; border-color: #1b1b1b; background-color: @theme_bg_color }");
+        styleContext.addProvider(cssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+        this.packStart(statusBar, false, true, 0);
 
         if (this.backend.indexingPercentage == 1.0) {
             this.showAll();
@@ -78,7 +102,8 @@ class LogViewer : Box {
 
         this.backend.onIndexingProgress.connect((float p) {
             if (p < 1.0) {
-                progressBar.setFraction(p);
+                if (progressBar)
+                    progressBar.setFraction(p);
             } else {
                 if (this.progressBar) {
                     this.remove(progressBar);
@@ -87,8 +112,6 @@ class LogViewer : Box {
                 this.showAll();
             }
         });
-
-
     }
 
     SearchEntry searchEntry;
@@ -121,6 +144,8 @@ class LogViewer : Box {
      * Draw the backend lines
      */
     bool onDraw(Scoped!Context c, Widget w) {
+        statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(currentView.lines.length));
+
         Adjustment vAdjustment = layout.getVadjustment();
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
