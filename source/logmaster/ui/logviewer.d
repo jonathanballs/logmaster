@@ -51,42 +51,44 @@ class LogViewer : Box {
         super(GtkOrientation.VERTICAL, 20);
         this.backend = backend;
         this.backend.onNewLines.connect(() {
-            if (this.layout) {
-                this.queueDraw();
-            }
+            this.queueDraw();
         });
+
+        /**
+         * Draw a progress bar
+         */
+        if (this.backend.indexingPercentage < 1.0) {
+            this.progressBar = new ProgressBar();
+            progressBar = new ProgressBar();
+            progressBar.setHalign(GtkAlign.CENTER);
+            progressBar.setValign(GtkAlign.CENTER);
+            progressBar.setFraction(this.backend.indexingPercentage);
+            this.packStart(progressBar, true, true, 0);
+        }
 
         /**
          * Pack the scrolled layout.
          */
-        if (backend.indexingPercentage == 1.0) {
-            this.packStart(constructSearchBar(), false, true, 0);
-            this.packScrolledLayout();
+        this.packStart(constructSearchBar(), false, true, 0);
+        this.packScrolledLayout();
+
+        if (this.backend.indexingPercentage == 1.0) {
             this.showAll();
-            return;
         }
 
-        /**
-         * Otherwise pack the progress bar
-         */
-        this.progressBar = new ProgressBar();
-        progressBar = new ProgressBar();
-        progressBar.setHalign(GtkAlign.CENTER);
-        progressBar.setValign(GtkAlign.CENTER);
-        progressBar.setFraction(this.backend.indexingPercentage);
-        this.packStart(progressBar, true, true, 0);
         this.backend.onIndexingProgress.connect((float p) {
             if (p < 1.0) {
                 progressBar.setFraction(p);
             } else {
-                if (this.layout) return;
-                this.remove(progressBar);
-                this.progressBar = null;
-                this.packStart(constructSearchBar(), false, true, 0);
-                this.packScrolledLayout();
+                if (this.progressBar) {
+                    this.remove(progressBar);
+                    this.progressBar = null;
+                }
                 this.showAll();
             }
         });
+
+
     }
 
     SearchEntry searchEntry;
