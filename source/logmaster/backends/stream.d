@@ -8,7 +8,7 @@ import std.variant;
 import core.thread;
 import core.time;
 
-import logmaster.backend;
+import logmaster.backends;
 import logmaster.backendevents;
 
 struct EventNewLine {

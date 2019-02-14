@@ -27,7 +27,7 @@ import gdk.Keysyms;
 import glib.Timeout;
 
 import logmaster.constants;
-import logmaster.backend;
+import logmaster.backends;
 import logmaster.backendevents;
 import logmaster.ui.logviewer;
 import logmaster.ui.commandlauncher;

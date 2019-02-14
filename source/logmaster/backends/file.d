@@ -11,7 +11,7 @@ import std.stdio;
 import std.string;
 import core.time;
 
-import logmaster.backend;
+import logmaster.backends;
 import logmaster.backendevents;
 
 private class FileLogLines : LogLines {

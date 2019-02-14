@@ -5,7 +5,7 @@ import std.concurrency;
 import std.process;
 import std.stdio;
 
-import logmaster.backend;
+import logmaster.backends;
 import logmaster.backendevents;
 import logmaster.backends.stream;
 

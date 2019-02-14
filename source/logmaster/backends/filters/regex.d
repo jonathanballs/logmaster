@@ -4,7 +4,7 @@ import std.algorithm.searching : canFind;
 import std.variant;
 import std.regex;
 
-import logmaster.backend;
+import logmaster.backends;
 
 /**
  * Just a quick experiment. A backend which is actually just a filter for another

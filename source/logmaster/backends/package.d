@@ -1,4 +1,4 @@
-module logmaster.backend;
+module logmaster.backends;
 
 import std.typecons : Typedef;
 import std.range : InputRange;

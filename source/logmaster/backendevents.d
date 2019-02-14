@@ -1,7 +1,7 @@
 module logmaster.backendevents;
 
 import std.variant;
-import logmaster.backend : BackendID;
+import logmaster.backends : BackendID;
 
 struct BackendEvent {
     BackendID backendID;

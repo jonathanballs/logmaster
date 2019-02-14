@@ -30,7 +30,7 @@ import gtk.Widget;
 import gtk.Widget;
 import gobject.Value;
 
-import logmaster.backend;
+import logmaster.backends;
 import logmaster.backendevents;
 import logmaster.backends.filters.regex;
 
@@ -136,6 +136,9 @@ class LogViewer : Box {
         });
     }
 
+    /**
+     * Toggles whether the search bar is visible or not
+     */
     void toggleSearchBar() {
         searchBar.setSearchMode(!searchBar.getSearchMode());
     }
