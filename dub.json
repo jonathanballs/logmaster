@@ -5,7 +5,7 @@
 		"Jonathan Balls"
 	],
         "dependencies": {
-            "gtk-d": "~>3.8.3"
+            "gtk-d": "~>3.8.5"
         },
 	"copyright": "Copyright © 2018, Jonathan Balls",
 	"name": "logmaster"
