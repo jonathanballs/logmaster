@@ -269,11 +269,11 @@ class LogmasterWindow : MainWindow {
         hbox.packStart(label, true, true, 0);
         hbox.packEnd(button, false, true, 0);
         hbox.setSizeRequest(180, -1);
+        hbox.showAll();
 
         auto pageNum = this.notebook.appendPage(logViewer, hbox);
-        hbox.showAll();
-        logViewer.showAll();
         this.showAll();
         this.notebook.setCurrentPage(pageNum);
+        this.notebook.show();
     }
 }

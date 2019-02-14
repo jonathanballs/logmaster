@@ -44,16 +44,19 @@ class LogViewer : Box {
         return backend;
     }
 
-    // Loading progress
+    // Loading progress. Log Viewer will show either a loading progress or
+    // another box with searchbar/scrolled window/status bar
     Alignment progressAlignment;
     ProgressBar progressBar;
 
     // Log view
+    SearchBar searchBar;
+    SearchEntry searchEntry;
     ScrolledWindow scrolledWindow;
     Layout layout;
-    Toolbar toolbar;
     Statusbar statusBar;
     private enum rowHeight = 20;
+
 
     this(LoggingBackend backend) {
         super(GtkOrientation.VERTICAL, 20);
@@ -61,83 +64,80 @@ class LogViewer : Box {
         this.backend.onNewLines.connect(() {
             this.queueDraw();
         });
+        this.setSpacing(0);
 
         /**
          * Draw a progress bar
          */
-        if (this.backend.indexingPercentage < 1.0) {
-            this.progressBar = new ProgressBar();
-            progressBar = new ProgressBar();
-            progressBar.setHalign(GtkAlign.CENTER);
-            progressBar.setValign(GtkAlign.CENTER);
-            progressBar.setFraction(this.backend.indexingPercentage);
-            this.packStart(progressBar, true, true, 0);
-        }
+        this.progressBar = new ProgressBar();
+        progressBar.setHalign(GtkAlign.CENTER);
+        progressBar.setValign(GtkAlign.CENTER);
+        progressBar.setFraction(this.backend.indexingPercentage);
 
         /**
-         * Pack the scrolled layout.
+         * Create the search bar
          */
-        this.packStart(constructSearchBar(), false, true, 0);
-        this.packScrolledLayout();
-        this.scrolledWindow.hide();
-        statusBar = new Statusbar();
-        statusBar.setMarginTop(0);
-        statusBar.setMarginBottom(0);
-        statusBar.setMarginLeft(0);
-        statusBar.setMarginRight(0);
-
-        /**
-         * Create status bar
-         */
-        StyleContext styleContext = statusBar.getStyleContext();
-        CssProvider cssProvider = new CssProvider();
-        cssProvider.loadFromData("statusbar { border-top-width: 1px; border-top-style: solid; border-color: #1b1b1b; background-color: @theme_bg_color }");
-        styleContext.addProvider(cssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-        this.packStart(statusBar, false, true, 0);
-
-        if (this.backend.indexingPercentage == 1.0) {
-            this.showAll();
-        }
-
-        this.backend.onIndexingProgress.connect((float p) {
-            if (p < 1.0) {
-                if (progressBar)
-                    progressBar.setFraction(p);
-            } else {
-                if (this.progressBar) {
-                    this.remove(progressBar);
-                    this.progressBar = null;
-                }
-                this.showAll();
-            }
-        });
-    }
-
-    SearchEntry searchEntry;
-    SearchBar searchBar;
-    private SearchBar constructSearchBar() {
         searchBar = new SearchBar();
         searchEntry = new SearchEntry();
         searchBar.add(searchEntry);
         searchBar.connectEntry(searchEntry);
         searchEntry.setSizeRequest(500, -1);
         searchEntry.setHexpand(true);
-        return searchBar;
-    }
 
-    void toggleSearchBar() {
-        searchBar.setSearchMode(!searchBar.getSearchMode());
-    }
-
-    private void packScrolledLayout() {
-        this.setSpacing(0);
+        /**
+         * Create the layout
+         */
         this.layout = new Layout(null, null);
         layout.setSize(100, rowHeight * cast(uint) this.backend.lines.length);
         layout.addOnDraw(&this.onDraw);
         this.scrolledWindow = new ScrolledWindow();
         scrolledWindow.add(layout);
-        this.packStart(scrolledWindow, true, true, 0);
+
+        /**
+         * Create the statusbar and remove margins and set its colour.
+         */
+        statusBar = new Statusbar();
+        statusBar.setMarginTop(0);
+        statusBar.setMarginBottom(0);
+        statusBar.setMarginLeft(0);
+        statusBar.setMarginRight(0);
+        StyleContext styleContext = statusBar.getStyleContext();
+        CssProvider cssProvider = new CssProvider();
+        cssProvider.loadFromData("statusbar {"
+            ~ "border-top-width: 1px;"
+            ~ "border-top-style: solid;"
+            ~ "border-color: #1b1b1b;"
+            ~ "background-color: @theme_bg_color }");
+        styleContext.addProvider(cssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+
+        if (this.backend.indexingPercentage < 1.0) {
+            this.packStart(progressBar, true, true, 0);
+        } else {
+            this.packStart(searchBar, false, true, 0);
+            this.packStart(scrolledWindow, true, true, 0);
+            this.packStart(statusBar, false, true, 0);
+        }
+
+        /**
+         * Connect to backend indexing progress
+         */
+        this.backend.onIndexingProgress.connect((float p) {
+            if (p < 1.0) {
+                if (progressBar) progressBar.setFraction(p);
+            } else if (this.progressBar) {
+                this.remove(progressBar);
+                this.progressBar = null;
+                this.packStart(searchBar, false, true, 0);
+                this.packStart(scrolledWindow, true, true, 0);
+                this.packStart(statusBar, false, true, 0);
+                this.showAll();
+            }
+        });
+    }
+
+    void toggleSearchBar() {
+        searchBar.setSearchMode(!searchBar.getSearchMode());
     }
 
     /**

@@ -124,8 +124,6 @@ private class FileIndexer {
 
 
     void start() {
-        StopWatch s;
-        s.start();
         ulong bufNum;
         f = File(filename);
         lineOffsets ~= 0;
@@ -147,9 +145,7 @@ private class FileIndexer {
             bufNum++;
         }
         sendLineOffsets();
-
         this.sendEvent(EventIndexingProgress(1.0));
-        s.stop();
     }
 
     protected void sendLineOffsets() {
