@@ -34,13 +34,11 @@ class BackendRegexLogLines : LogLines {
 }
 
 // A backend but instead of 
-class BackendRegexFilter : LoggingBackend {
+class BackendRegexFilter {
     LoggingBackend backend;
     string filterText;
     BackendRegexLogLines _lines;
-
-    override LogLines lines() { return _lines; }
-
+    LogLines lines() { return _lines; }
     long[] matchingLineNumbers;
 
     this(LoggingBackend backend, string filterText) {
@@ -58,15 +56,5 @@ class BackendRegexFilter : LoggingBackend {
                 this._lines.matchingLines ~= line.lineID;
             }
         }
-
-        super(filterText, filterText);
-    }
-
-    override void handleEvent(Variant v) {
-        return;
-    }
-
-    override void spawnIndexingThread() {
-        return;
     }
 }

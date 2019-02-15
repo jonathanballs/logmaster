@@ -38,11 +38,6 @@ class LogViewer : Box {
     LoggingBackend backend;
     BackendRegexFilter filter;
 
-    private LoggingBackend currentView() {
-        if (filter) return filter;
-        return backend;
-    }
-
     // Loading progress. Log Viewer will show either a loading progress or
     // another box with searchbar/scrolled window/status bar
     Alignment progressAlignment;
@@ -146,9 +141,10 @@ class LogViewer : Box {
      * Callback for layout drawing
      */
     bool onDraw(Scoped!Context c, Widget w) {
-        statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(currentView.lines.length));
-        if (!currentView.lines) return true;
-        drawLogLines(&c, cast(Layout) w, currentView.lines);
+        LogLines lines = filter ? filter.lines : backend.lines;
+        statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(lines.length));
+        if (!lines.length) return true;
+        drawLogLines(&c, cast(Layout) w, lines);
         return true;
     }
 
