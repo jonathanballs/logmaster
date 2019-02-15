@@ -1,9 +1,7 @@
 module logmaster.ui.window;
 
 import std.concurrency;
-import std.format;
 import std.stdio;
-import core.thread;
 import core.time;
 
 import gtk.Button;
@@ -12,15 +10,9 @@ import gtk.HeaderBar;
 import gtk.FileChooserDialog;
 import gtk.Image;
 import gtk.Label;
-import gtk.ListStore;
-import gtk.HBox;
+import gtk.Box;
 import gtk.MainWindow;
 import gtk.Notebook;
-import gtk.ScrolledWindow;
-import gtk.StockItem;
-import gtk.TreeIter;
-import gtk.TreeView;
-import gtk.TreeViewColumn;
 import gtk.Widget;
 import gdk.FrameClock;
 import gdk.Keysyms;
@@ -265,13 +257,13 @@ class LogmasterWindow : MainWindow {
 
         label.setHexpand(true);
         label.setEllipsize(PangoEllipsizeMode.END);
-        auto hbox = new HBox(false, 5);
-        hbox.packStart(label, true, true, 0);
-        hbox.packEnd(button, false, true, 0);
-        hbox.setSizeRequest(180, -1);
-        hbox.showAll();
+        auto box = new Box(GtkOrientation.HORIZONTAL, 0);
+        box.packStart(label, true, true, 0);
+        box.packEnd(button, false, true, 0);
+        box.setSizeRequest(180, -1);
+        box.showAll();
 
-        auto pageNum = this.notebook.appendPage(logViewer, hbox);
+        auto pageNum = this.notebook.appendPage(logViewer, box);
         this.showAll();
         this.notebook.setCurrentPage(pageNum);
         this.notebook.show();
