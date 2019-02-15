@@ -14,6 +14,13 @@ import core.time;
 import logmaster.backends;
 import logmaster.backendevents;
 
+private struct EventIndexingProgress {
+    float progressPercentage;
+    ulong[4000] lineOffsets; // Needs to be static array to be shared
+    short lineOffsetsLength;
+}
+
+
 private class FileLogLines : LogLines {
     File f;
     ulong[] lineOffsets;
@@ -21,6 +28,7 @@ private class FileLogLines : LogLines {
 
     this(string filename) { this.filename = filename; }
 
+    override ulong length() { return lineOffsets.length; }
     override ulong opDollar() { return lineOffsets.length; }
     override LogLine opIndex(long i) {
         if (!f.isOpen()) {
@@ -57,8 +65,6 @@ private class FileLogLines : LogLines {
             return LogLine(i, "");
         }
     }
-    override ulong length() { return lineOffsets.length; }
-
     override int opApply(int delegate(LogLine) dlg) {
         int result = 0;
         foreach (i; 0..length()) {
@@ -67,6 +73,9 @@ private class FileLogLines : LogLines {
         }
         return 0;
     }
+
+    ulong _longestLineLength;
+    override ulong longestLineLength() { return _longestLineLength; }
 }
 
 class FileBackend : LoggingBackend {
@@ -89,6 +98,17 @@ class FileBackend : LoggingBackend {
             this.indexingPercentage = e.progressPercentage;
             this.onIndexingProgress.emit(this.indexingPercentage);
             this._lines.lineOffsets ~= e.lineOffsets[0..e.lineOffsetsLength];
+
+            // Calculate the longest line
+            auto startIndex = _lines.lineOffsets.length - e.lineOffsetsLength;
+            if (_lines.lineOffsets.length != e.lineOffsetsLength) startIndex--;
+            import std.range : slide;
+            import std.algorithm : max;
+            foreach(pair; _lines.lineOffsets[startIndex..$-1].slide(2)) {
+                _lines._longestLineLength = max(_lines.longestLineLength, pair[1] - pair[0]);
+            }
+
+
             this.onNewLines.emit();
         } else {
             import std.stdio : writeln;

@@ -8,12 +8,6 @@ struct BackendEvent {
     Variant payload;
 }
 
-struct EventIndexingProgress {
-    float progressPercentage;
-    ulong[4000] lineOffsets; // Needs to be static array to be shared
-    short lineOffsetsLength;
-}
-
 struct EventException {
     Exception e;
 }

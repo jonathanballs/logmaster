@@ -26,6 +26,8 @@ private class StreamLogLines : LogLines {
         }
         return 0;
     }
+    ulong _longestLineLength;
+    override ulong longestLineLength() { return _longestLineLength; }
 }
 
 abstract class StreamBackend : LoggingBackend {
@@ -45,6 +47,8 @@ abstract class StreamBackend : LoggingBackend {
         if (v.type == typeid(EventNewLine)) {
             auto e = v.get!EventNewLine;
             this._lines.cache ~= e.newLine;
+            import std.algorithm : max;
+            this._lines._longestLineLength = max(_lines._longestLineLength, e.newLine.length);
             this.onNewLines.emit();
         }
     }

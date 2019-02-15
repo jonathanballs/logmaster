@@ -148,14 +148,18 @@ class LogViewer : Box {
      */
     bool onDraw(Scoped!Context c, Widget w) {
         statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(currentView.lines.length));
+        if (currentView.lines.length == 0) return true;
 
         Adjustment vAdjustment = layout.getVadjustment();
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        if (currentView.lines.length == 0) return true;
+        auto x = -cast(uint) layout.getHadjustment().getValue();
 
-        this.layout.setSize(100, rowHeight * cast(uint) this.currentView.lines.length);
+        import pango.PgAttribute;
+        auto charWidth = 9;
+        this.layout.setSize(cast (uint) currentView.lines.longestLineLength * charWidth,
+            rowHeight * cast(uint) this.currentView.lines.length);
 
         auto viewportSize = this.getLayoutAllocation(layout);
 
@@ -165,8 +169,8 @@ class LogViewer : Box {
             string message = currentView.lines[firstLineNumber + i].message;
             uint y = firstLineY + i*rowHeight;
 
-            GdkRectangle rect = GdkRectangle(0, y,
-                viewportSize.width, this.rowHeight);
+            GdkRectangle rect = GdkRectangle(x, y,
+                cast(uint) currentView.lines.longestLineLength*charWidth, this.rowHeight);
 
             CellRendererText renderer = new CellRendererText();
             renderer.setProperty("text", message);

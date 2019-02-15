@@ -19,6 +19,7 @@ class LogLines {
     ulong opDollar() { return this.length; }
     ulong length() { return 0; }
     int opApply(int delegate(LogLine) dlg) { return 0; }
+    ulong longestLineLength() { return 0; }
 }
 
 // NB: LoggingBackend should be fine for general lookup (if isIndexed is true)
@@ -31,6 +32,12 @@ abstract class LoggingBackend {
     string shortTitle;
     string longTitle;
     BackendID id;
+    LogLines lines();
+    /// Percentage that implexing has completed Will be negative if not
+    /// available (i.e for unknown log sizes) Will be 100.0 if complete
+    float indexingPercentage = 0.0;
+    Signal!() onNewLines = new Signal!();
+    Signal!(float) onIndexingProgress = new Signal!(float);
 
     /**
      * Create a new instance of logging backend.
@@ -41,18 +48,13 @@ abstract class LoggingBackend {
         this.id = availableID++;
     }
 
-    /// Percentage that implexing has completed Will be negative if not
-    /// available (i.e for unknown log sizes) Will be 100.0 if complete
-    float indexingPercentage = 0.0;
-
-    Signal!() onNewLines = new Signal!();
-    Signal!(float) onIndexingProgress = new Signal!(float);
-
-    LogLines lines();
-
-    // Backends should be responsible for managing their own threads.
+    /**
+     * Called when the indexing thread may be started
+     */
     void spawnIndexingThread();
 
-    // Handle a backend event.
+    /**
+     * Handle backend events
+     */
     void handleEvent(Variant v);
 }
