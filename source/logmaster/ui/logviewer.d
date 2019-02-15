@@ -1,5 +1,6 @@
 module logmaster.ui.logviewer;
 
+import std.algorithm.comparison : min;
 import std.concurrency;
 import std.format;
 import std.stdio;
@@ -108,6 +109,7 @@ class LogViewer : Box {
         if (this.backend.indexingPercentage < 1.0) {
             this.packStart(progressBar, true, true, 0);
         } else {
+            this.progressBar = null;
             this.packStart(searchBar, false, true, 0);
             this.packStart(scrolledWindow, true, true, 0);
             this.packStart(statusBar, false, true, 0);
@@ -120,6 +122,7 @@ class LogViewer : Box {
             if (p < 1.0) {
                 if (progressBar) progressBar.setFraction(p);
             } else if (this.progressBar) {
+                if (!this.progressBar) return;
                 this.remove(progressBar);
                 this.progressBar = null;
                 this.packStart(searchBar, false, true, 0);
@@ -143,7 +146,6 @@ class LogViewer : Box {
     bool onDraw(Scoped!Context c, Widget w) {
         LogLines lines = filter ? filter.lines : backend.lines;
         statusBar.push(statusBar.getContextId("description"), format!"%,d Lines"(lines.length));
-        if (!lines.length) return true;
         drawLogLines(&c, cast(Layout) w, lines);
         return true;
     }
@@ -157,26 +159,40 @@ class LogViewer : Box {
      *      lines = Logmaster `LogLines` which need to be rendered
      */
     private bool drawLogLines(Scoped!Context* c, Layout layout, LogLines lines) {
-        Adjustment vAdjustment = layout.getVadjustment();
-        uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
-        uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        // TODO: Calculate this with pango
         auto charWidth = 9;
         layout.setSize(cast (uint) lines.longestLineLength * charWidth,
             rowHeight * cast(uint) lines.length);
 
+
+        // TODO: Calculate this with pango
         GdkRectangle viewportSize;
         layout.getAllocation(viewportSize);
 
         auto x = -cast(uint) layout.getHadjustment().getValue();
-        foreach (i; 0..(viewportSize.height / rowHeight) + 2) {
-            if (firstLineNumber + i > lines.length-1) break;
+        Adjustment vAdjustment = layout.getVadjustment();
+        uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
+        uint y = -(cast(uint) vAdjustment.getValue() % rowHeight);
 
-            string message = lines[firstLineNumber + i].message;
-            uint y = firstLineY + i*rowHeight;
-            GdkRectangle rect = GdkRectangle(x, y,
+
+        auto linesToPrintCount = min((viewportSize.height/rowHeight)+1,
+            lines.length-firstLineNumber);
+        writeln(lines.length);
+        writeln(firstLineNumber);
+        writeln(linesToPrintCount);
+        writeln();
+
+        if (!lines.length) return true;
+
+        foreach (i; 0..linesToPrintCount) {
+            auto lineNumber = firstLineNumber+i;
+
+            if (lineNumber >= lines.length) break;
+            string message = lines[lineNumber].message;
+
+            GdkRectangle rect = GdkRectangle(x, y + i*rowHeight,
                 cast(uint) lines.longestLineLength*charWidth, this.rowHeight);
+
             CellRendererText renderer = new CellRendererText();
             renderer.setProperty("text", message);
             renderer.setProperty("family", "Monospace");

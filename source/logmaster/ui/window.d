@@ -84,9 +84,14 @@ class LogmasterWindow : MainWindow {
 
             if (g.keyval == Keysyms.GDK_Return) {
                 string searchString = currentLogViewer.searchEntry.getText();
-                import logmaster.filters.regex;
-                auto filter = new BackendRegexFilter(currentLogViewer.backend, searchString);
-                currentLogViewer.filter = filter;
+                if (searchString) {
+                    import logmaster.filters.regex;
+                    auto filter = new BackendRegexFilter(currentLogViewer.backend, searchString);
+                    currentLogViewer.filter = filter;
+                } else {
+                    currentLogViewer.filter = null;
+                }
+                currentLogViewer.queueDraw();
             }
 
             if (g.state & ModifierType.CONTROL_MASK && g.keyval == Keysyms.GDK_f)

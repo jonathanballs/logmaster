@@ -1,8 +1,10 @@
 module logmaster.filters.regex;
 
 import std.algorithm.searching : canFind;
-import std.variant;
+import std.concurrency;
 import std.regex;
+import std.stdio;
+import std.variant;
 
 import logmaster.backends;
 
@@ -37,24 +39,27 @@ class BackendRegexLogLines : LogLines {
 class BackendRegexFilter {
     LoggingBackend backend;
     string filterText;
+
     BackendRegexLogLines _lines;
     LogLines lines() { return _lines; }
-    long[] matchingLineNumbers;
 
     this(LoggingBackend backend, string filterText) {
         this.backend = backend;
         this.filterText = filterText;
         this._lines = new BackendRegexLogLines(backend);
+    }
 
-        // For now lets just do it here
-        auto re = regex(filterText);
-        foreach(LogLine line; this.backend.lines) {
-            if (line.message.matchFirst(re)) {
-                if (line.message.length > _lines._longestLineLength) { 
-                    _lines._longestLineLength = line.message.length;
+    Tid tid;
+    void spawnIndexingThread() {
+        this.tid = spawn((shared LoggingBackend _backend, string filterString) {
+            auto re = regex(filterString);
+            auto backend = cast(LoggingBackend) _backend;
+            foreach(LogLine line; backend.lines) {
+                if (line.message.matchFirst(re)) {
+                    writeln("matched");
+                    // backend._lines.matchingLines ~= line.lineID;
                 }
-                this._lines.matchingLines ~= line.lineID;
             }
-        }
+        }, cast(shared) backend, filterText);
     }
 }
