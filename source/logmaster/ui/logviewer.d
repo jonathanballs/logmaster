@@ -27,7 +27,6 @@ import gtk.Toolbar;
 import gtk.TreeIter;
 import gtk.TreeViewColumn;
 import gtk.Widget;
-import gtk.Widget;
 import gobject.Value;
 
 import logmaster.backends;
@@ -144,46 +143,50 @@ class LogViewer : Box {
     }
 
     /**
-     * Draw the backend lines
+     * Callback for layout drawing
      */
     bool onDraw(Scoped!Context c, Widget w) {
         statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(currentView.lines.length));
-        if (currentView.lines.length == 0) return true;
+        if (!currentView.lines) return true;
+        drawLogLines(&c, cast(Layout) w, currentView.lines);
+        return true;
+    }
 
+    /**
+     * Draw a set of log lines onto a layout. This is where the actual logs are
+     * rendered onto the screen.
+     * Params:
+     *      c = The Cairo `Context` used for drawing
+     *      layout = The `GtkLayout` to render to
+     *      lines = Logmaster `LogLines` which need to be rendered
+     */
+    private bool drawLogLines(Scoped!Context* c, Layout layout, LogLines lines) {
         Adjustment vAdjustment = layout.getVadjustment();
         uint firstLineNumber = cast(uint) vAdjustment.getValue() / rowHeight;
         uint firstLineY = firstLineNumber * rowHeight - cast(uint) vAdjustment.getValue();
 
-        auto x = -cast(uint) layout.getHadjustment().getValue();
-
-        import pango.PgAttribute;
+        // TODO: Calculate this with pango
         auto charWidth = 9;
-        this.layout.setSize(cast (uint) currentView.lines.longestLineLength * charWidth,
-            rowHeight * cast(uint) this.currentView.lines.length);
+        layout.setSize(cast (uint) lines.longestLineLength * charWidth,
+            rowHeight * cast(uint) lines.length);
 
-        auto viewportSize = this.getLayoutAllocation(layout);
+        GdkRectangle viewportSize;
+        layout.getAllocation(viewportSize);
 
+        auto x = -cast(uint) layout.getHadjustment().getValue();
         foreach (i; 0..(viewportSize.height / rowHeight) + 2) {
-            if (firstLineNumber + i > currentView.lines.length-1) break;
+            if (firstLineNumber + i > lines.length-1) break;
 
-            string message = currentView.lines[firstLineNumber + i].message;
+            string message = lines[firstLineNumber + i].message;
             uint y = firstLineY + i*rowHeight;
-
             GdkRectangle rect = GdkRectangle(x, y,
-                cast(uint) currentView.lines.longestLineLength*charWidth, this.rowHeight);
-
+                cast(uint) lines.longestLineLength*charWidth, this.rowHeight);
             CellRendererText renderer = new CellRendererText();
             renderer.setProperty("text", message);
             renderer.setProperty("family", "Monospace");
-            renderer.render(c, w, &rect, &rect, GtkCellRendererState.INSENSITIVE);
+            renderer.render(*c, layout, &rect, &rect, GtkCellRendererState.INSENSITIVE);
         }
 
         return true;
-    }
-
-    private GdkRectangle getLayoutAllocation(Layout layout) {
-        GdkRectangle allocatedSize;
-        layout.getAllocation(allocatedSize);
-        return allocatedSize;
     }
 }
