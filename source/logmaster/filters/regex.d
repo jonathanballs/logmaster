@@ -1,4 +1,4 @@
-module logmaster.backends.filters.regex;
+module logmaster.filters.regex;
 
 import std.algorithm.searching : canFind;
 import std.variant;

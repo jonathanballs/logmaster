@@ -31,7 +31,7 @@ import gobject.Value;
 
 import logmaster.backends;
 import logmaster.backendevents;
-import logmaster.backends.filters.regex;
+import logmaster.filters.regex;
 
 class LogViewer : Box {
     // Meta
