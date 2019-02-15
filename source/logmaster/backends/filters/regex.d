@@ -29,6 +29,8 @@ class BackendRegexLogLines : LogLines {
         }
         return 0;
     }
+    ulong _longestLineLength;
+    override ulong longestLineLength() { return _longestLineLength; }
 }
 
 // A backend but instead of 
@@ -50,6 +52,9 @@ class BackendRegexFilter : LoggingBackend {
         auto re = regex(filterText);
         foreach(LogLine line; this.backend.lines) {
             if (line.message.matchFirst(re)) {
+                if (line.message.length > _lines._longestLineLength) { 
+                    _lines._longestLineLength = line.message.length;
+                }
                 this._lines.matchingLines ~= line.lineID;
             }
         }
