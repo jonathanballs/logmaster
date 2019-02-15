@@ -142,7 +142,7 @@ class LogViewer : Box {
      */
     bool onDraw(Scoped!Context c, Widget w) {
         LogLines lines = filter ? filter.lines : backend.lines;
-        statusBar.push(statusBar.getContextId("description"), format!"%d Lines"(lines.length));
+        statusBar.push(statusBar.getContextId("description"), format!"%,d Lines"(lines.length));
         if (!lines.length) return true;
         drawLogLines(&c, cast(Layout) w, lines);
         return true;
