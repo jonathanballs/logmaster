@@ -1,19 +1,23 @@
-module logmaster.filters.regex;
+module logmaster.filters;
 
 import std.algorithm.searching : canFind;
 import std.concurrency;
 import std.regex;
 import std.stdio;
 import std.variant;
+import std.typecons;
 
 import logmaster.backends;
+import logmaster.loglines;
+alias FilterID = Typedef!(int);
+private static FilterID availableID = 0;
 
-/**
- * Just a quick experiment. A backend which is actually just a filter for another
- * log backend.
- */
+struct FilterEvent {
+    FilterID filterID;
+    Variant v;
+}
 
-class BackendRegexLogLines : LogLines {
+class RegexFilterLogLines : LogLines {
     LoggingBackend backend;
     long[] matchingLines;
 
@@ -36,17 +40,19 @@ class BackendRegexLogLines : LogLines {
 }
 
 // A backend but instead of 
-class BackendRegexFilter {
+class RegexFilter {
     LoggingBackend backend;
     string filterText;
+    FilterID id;
 
-    BackendRegexLogLines _lines;
+    RegexFilterLogLines _lines;
     LogLines lines() { return _lines; }
 
     this(LoggingBackend backend, string filterText) {
+        this.id = availableID++;
         this.backend = backend;
         this.filterText = filterText;
-        this._lines = new BackendRegexLogLines(backend);
+        this._lines = new RegexFilterLogLines(backend);
     }
 
     Tid tid;

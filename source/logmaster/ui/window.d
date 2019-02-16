@@ -21,6 +21,7 @@ import glib.Timeout;
 import logmaster.constants;
 import logmaster.backends;
 import logmaster.backendevents;
+import logmaster.filters;
 import logmaster.ui.logviewer;
 import logmaster.ui.commandlauncher;
 
@@ -28,6 +29,8 @@ import logmaster.ui.commandlauncher;
 /// GtkMainWindow subclass for Logmaster
 class LogmasterWindow : MainWindow {
     LoggingBackend[BackendID] backends;
+    RegexFilter[FilterID] filters;
+
     LogViewer[BackendID] logViewers;
 
     Notebook notebook;
@@ -85,9 +88,8 @@ class LogmasterWindow : MainWindow {
             if (g.keyval == Keysyms.GDK_Return) {
                 string searchString = currentLogViewer.searchEntry.getText();
                 if (searchString) {
-                    import logmaster.filters.regex;
-                    auto filter = new BackendRegexFilter(currentLogViewer.backend, searchString);
-                    currentLogViewer.filter = filter;
+                    auto filter = new RegexFilter(currentLogViewer.backend, searchString);
+                    currentLogViewer.backend.setFilter(filter);
                 } else {
                     currentLogViewer.filter = null;
                 }

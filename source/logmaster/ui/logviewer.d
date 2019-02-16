@@ -32,12 +32,12 @@ import gobject.Value;
 
 import logmaster.backends;
 import logmaster.backendevents;
-import logmaster.filters.regex;
+import logmaster.filters;
 
 class LogViewer : Box {
     // Meta
     LoggingBackend backend;
-    BackendRegexFilter filter;
+    RegexFilter filter;
 
     // Loading progress. Log Viewer will show either a loading progress or
     // another box with searchbar/scrolled window/status bar
@@ -177,10 +177,6 @@ class LogViewer : Box {
 
         auto linesToPrintCount = min((viewportSize.height/rowHeight)+1,
             lines.length-firstLineNumber);
-        writeln(lines.length);
-        writeln(firstLineNumber);
-        writeln(linesToPrintCount);
-        writeln();
 
         if (!lines.length) return true;
 

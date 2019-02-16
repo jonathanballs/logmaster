@@ -8,19 +8,11 @@ import std.variant;
 
 import logmaster.backendevents;
 import logmaster.signals;
+import logmaster.filters;
+public import logmaster.loglines;
 
 alias BackendID = Typedef!(int);
 private static BackendID availableID = 0;
-
-alias LogLine = Tuple!(ulong, "lineID", string, "message");
-
-class LogLines {
-    LogLine opIndex(long i) { return LogLine(0, "Test"); }
-    ulong opDollar() { return this.length; }
-    ulong length() { return 0; }
-    int opApply(int delegate(LogLine) dlg) { return 0; }
-    ulong longestLineLength() { return 0; }
-}
 
 // NB: LoggingBackend should be fine for general lookup (if isIndexed is true)
 // Many log types will have special features (which is good) but those features
@@ -57,4 +49,13 @@ abstract class LoggingBackend {
      * Handle backend events
      */
     void handleEvent(Variant v);
+
+    /**
+     * Filtering. Just one filter for now but will have to mange multiple ones
+     * in the future.
+     */
+    RegexFilter filter;
+    void setFilter(RegexFilter filter) {
+        this.filter = filter;
+    }
 }

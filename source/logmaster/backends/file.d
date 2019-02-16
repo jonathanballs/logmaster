@@ -20,7 +20,6 @@ private struct EventIndexingProgress {
     short lineOffsetsLength;
 }
 
-
 private class FileLogLines : LogLines {
     File f;
     ulong[] lineOffsets;
@@ -29,7 +28,7 @@ private class FileLogLines : LogLines {
     this(string filename) { this.filename = filename; }
 
     override ulong length() { return lineOffsets.length; }
-    override ulong opDollar() { return lineOffsets.length; }
+    override ulong opDollar() { return this.length; }
     override LogLine opIndex(long i) {
         if (!f.isOpen()) {
             f.open(this.filename);
