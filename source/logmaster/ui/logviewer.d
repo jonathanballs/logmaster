@@ -37,7 +37,6 @@ import logmaster.filters;
 class LogViewer : Box {
     // Meta
     LoggingBackend backend;
-    RegexFilter filter;
 
     // Loading progress. Log Viewer will show either a loading progress or
     // another box with searchbar/scrolled window/status bar
@@ -144,7 +143,7 @@ class LogViewer : Box {
      * Callback for layout drawing
      */
     bool onDraw(Scoped!Context c, Widget w) {
-        LogLines lines = filter ? filter.lines : backend.lines;
+        LogLines lines = backend.filter ? backend.filter.lines : backend.lines;
         statusBar.push(statusBar.getContextId("description"), format!"%,d Lines"(lines.length));
         drawLogLines(&c, cast(Layout) w, lines);
         return true;

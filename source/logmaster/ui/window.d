@@ -91,7 +91,7 @@ class LogmasterWindow : MainWindow {
                     auto filter = new RegexFilter(currentLogViewer.backend, searchString);
                     currentLogViewer.backend.setFilter(filter);
                 } else {
-                    currentLogViewer.filter = null;
+                    currentLogViewer.backend.setFilter(null);
                 }
                 currentLogViewer.queueDraw();
             }

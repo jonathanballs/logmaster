@@ -57,5 +57,7 @@ abstract class LoggingBackend {
     RegexFilter filter;
     void setFilter(RegexFilter filter) {
         this.filter = filter;
+        if (filter)
+            filter.spawnIndexingThread();
     }
 }
