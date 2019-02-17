@@ -51,7 +51,11 @@ abstract class LoggingBackend {
      */
     void handleEvent(Variant v) {
         if (v.type == typeid(FilterEvent)) {
-            writeln("Filter event recieved");
+            FilterEvent fe = v.get!FilterEvent;
+            if (fe.filterID != this.filter.id) {
+                return;
+            }
+            filter.handleEvent(fe);
         }
     }
 

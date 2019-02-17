@@ -74,10 +74,21 @@ class RegexFilter {
             auto backend = cast(LoggingBackend) _backend;
             foreach(LogLine line; backend.lines) {
                 if (line.message.matchFirst(re)) {
+                    writeln(line);
                     sendNewLine(line.lineID);
                 }
             }
+            writeln();
         }, cast(shared) backend, this.id, filterText);
+    }
+
+    bool handleEvent(FilterEvent event) {
+        assert(event.filterID == this.id);
+        this._lines.matchingLines ~= event.payload.get!long;
+        if (lines[$-1].message.length > lines.longestLineLength) {
+            _lines._longestLineLength = lines[$-1].message.length;
+        }
+        return true;
     }
 
     ~this() {
