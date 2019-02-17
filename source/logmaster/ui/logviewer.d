@@ -186,10 +186,6 @@ class LogViewer : Box {
             if (lineNumber >= lines.length) break;
             string message = lines[lineNumber].message;
 
-            if (!message.length) {
-                writeln(lines[lineNumber]);
-            }
-
             GdkRectangle rect = GdkRectangle(x, y + i*rowHeight,
                 cast(uint) lines.longestLineLength*charWidth, this.rowHeight);
 

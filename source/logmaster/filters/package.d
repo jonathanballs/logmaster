@@ -74,11 +74,9 @@ class RegexFilter {
             auto backend = cast(LoggingBackend) _backend;
             foreach(LogLine line; backend.lines) {
                 if (line.message.matchFirst(re)) {
-                    writeln(line);
                     sendNewLine(line.lineID);
                 }
             }
-            writeln();
         }, cast(shared) backend, this.id, filterText);
     }
 
