@@ -1,8 +1,9 @@
 module logmaster.backends;
 
-import std.typecons : Typedef;
-import std.range : InputRange;
 import std.concurrency;
+import std.range : InputRange;
+import std.stdio;
+import std.typecons : Typedef;
 import std.typecons;
 import std.variant;
 
@@ -48,7 +49,11 @@ abstract class LoggingBackend {
     /**
      * Handle backend events
      */
-    void handleEvent(Variant v);
+    void handleEvent(Variant v) {
+        if (v.type == typeid(FilterEvent)) {
+            writeln("Filter event recieved");
+        }
+    }
 
     /**
      * Filtering. Just one filter for now but will have to mange multiple ones
@@ -59,5 +64,9 @@ abstract class LoggingBackend {
         this.filter = filter;
         if (filter)
             filter.spawnIndexingThread();
+    }
+
+    ~this() {
+        writeln("Destructing filter");
     }
 }

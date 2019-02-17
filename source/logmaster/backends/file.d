@@ -110,8 +110,7 @@ class FileBackend : LoggingBackend {
 
             this.onNewLines.emit();
         } else {
-            import std.stdio : writeln;
-            writeln("ERR: can't handle this event");
+            super.handleEvent(v);
         }
     }
 

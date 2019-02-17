@@ -8,13 +8,14 @@ import std.variant;
 import std.typecons;
 
 import logmaster.backends;
+import logmaster.backendevents;
 import logmaster.loglines;
 alias FilterID = Typedef!(int);
 private static FilterID availableID = 0;
 
 struct FilterEvent {
     FilterID filterID;
-    Variant v;
+    Variant payload;
 }
 
 class RegexFilterLogLines : LogLines {
@@ -57,15 +58,29 @@ class RegexFilter {
 
     Tid tid;
     void spawnIndexingThread() {
-        this.tid = spawn((shared LoggingBackend _backend, string filterString) {
+        this.tid = spawn((shared LoggingBackend _backend, FilterID id, string filterString) {
+
+
+            void sendNewLine(long lineID) {
+                auto event = new FilterEvent(id);
+                event.payload = lineID;
+                BackendEvent b;
+                b.backendID = cast(BackendID) _backend.id;
+                b.payload = *event;
+                send(ownerTid(), b);
+            }
+
             auto re = regex(filterString);
             auto backend = cast(LoggingBackend) _backend;
             foreach(LogLine line; backend.lines) {
                 if (line.message.matchFirst(re)) {
-                    writeln("matched");
-                    // backend._lines.matchingLines ~= line.lineID;
+                    sendNewLine(line.lineID);
                 }
             }
-        }, cast(shared) backend, filterText);
+        }, cast(shared) backend, this.id, filterText);
+    }
+
+    ~this() {
+        writeln("Destructing filter");
     }
 }
