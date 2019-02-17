@@ -30,9 +30,8 @@ private class FileLogLines : LogLines {
     override ulong length() { return lineOffsets.length; }
     override ulong opDollar() { return this.length; }
     override LogLine opIndex(long i) {
-        if (!f.isOpen()) {
-            f.open(this.filename);
-        }
+        File f;
+        f.open(this.filename);
 
         long startOffset = lineOffsets[i];
         long endOffset;
