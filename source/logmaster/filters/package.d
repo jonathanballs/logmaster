@@ -60,7 +60,6 @@ class RegexFilter {
     void spawnIndexingThread() {
         this.tid = spawn((shared LoggingBackend _backend, FilterID id, string filterString) {
 
-
             void sendNewLine(long lineID) {
                 auto event = new FilterEvent(id);
                 event.payload = lineID;

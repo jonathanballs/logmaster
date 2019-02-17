@@ -15,6 +15,7 @@ import gtk.Alignment;
 import gtk.Box;
 import gtk.CellRendererText;
 import gtk.CellRendererText;
+import gtk.CheckButton;
 import gtk.CssProvider;
 import gtk.Layout;
 import gtk.ProgressBar;
@@ -95,6 +96,7 @@ class LogViewer : Box {
         statusBar.setMarginBottom(0);
         statusBar.setMarginLeft(0);
         statusBar.setMarginRight(0);
+        statusBar.packEnd(new CheckButton("Follow"), false, false, 0);
         StyleContext styleContext = statusBar.getStyleContext();
         CssProvider cssProvider = new CssProvider();
         cssProvider.loadFromData("statusbar {"
