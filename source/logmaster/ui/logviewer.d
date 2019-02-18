@@ -50,6 +50,7 @@ class LogViewer : Box {
     ScrolledWindow scrolledWindow;
     Layout layout;
     Statusbar statusBar;
+    CheckButton followButton;
     private enum rowHeight = 20;
 
 
@@ -96,7 +97,8 @@ class LogViewer : Box {
         statusBar.setMarginBottom(0);
         statusBar.setMarginLeft(0);
         statusBar.setMarginRight(0);
-        statusBar.packEnd(new CheckButton("Follow"), false, false, 0);
+        followButton = new CheckButton("Follow");
+        statusBar.packEnd(followButton, false, false, 0);
         StyleContext styleContext = statusBar.getStyleContext();
         CssProvider cssProvider = new CssProvider();
         cssProvider.loadFromData("statusbar {"
@@ -165,6 +167,10 @@ class LogViewer : Box {
         layout.setSize(cast (uint) lines.longestLineLength * charWidth,
             rowHeight * cast(uint) lines.length);
 
+        if (this.followButton.getActive()) {
+            Adjustment adj = layout.getVadjustment();
+            adj.setValue(adj.getUpper());
+        }
 
         // TODO: Calculate this with pango
         GdkRectangle viewportSize;
