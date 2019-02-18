@@ -50,6 +50,8 @@ abstract class StreamBackend : LoggingBackend {
             import std.algorithm : max;
             this._lines._longestLineLength = max(_lines._longestLineLength, e.newLine.length);
             this.onNewLines.emit();
+        } else {
+            super.handleEvent(v);
         }
     }
 }
