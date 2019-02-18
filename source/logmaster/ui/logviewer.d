@@ -182,7 +182,7 @@ class LogViewer : Box {
         uint y = -(cast(uint) vAdjustment.getValue() % rowHeight);
 
 
-        auto linesToPrintCount = min((viewportSize.height/rowHeight)+1,
+        auto linesToPrintCount = min((viewportSize.height/rowHeight)+2,
             lines.length-firstLineNumber);
 
         if (!lines.length) return true;
