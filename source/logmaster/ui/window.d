@@ -16,6 +16,7 @@ import gtk.Notebook;
 import gtk.Widget;
 import gdk.FrameClock;
 import gdk.Keysyms;
+import gdk.Pixbuf;
 import glib.Timeout;
 
 import logmaster.constants;
@@ -257,14 +258,29 @@ class LogmasterWindow : MainWindow {
 
         auto label = new Label(backend.shortTitle);
         label.setXalign(0.0);
-        auto image = new Image(StockID.CLOSE, GtkIconSize.MENU);
         auto button = new CloseButton(backend.id, this);
         button.setRelief(GtkReliefStyle.NONE);
-        button.setImage(image);
+        button.setImage(new Image(StockID.CLOSE, GtkIconSize.MENU));
+
+        auto icon = new Image();
+
+        import logmaster.backends.subprocess;
+        if (typeid(backend) == typeid(SubprocessBackend)) {
+            import gdk.Pixbuf;
+            auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
+            icon.setFromPixbuf(kubeIcon);
+            icon.setMarginRight(8);
+        } else {
+            icon.setFromIconName("folder-documents-symbolic", GtkIconSize.MENU);
+            icon.setMarginRight(8);
+        }
 
         label.setHexpand(true);
         label.setEllipsize(PangoEllipsizeMode.END);
         auto box = new Box(GtkOrientation.HORIZONTAL, 0);
+
+
+        box.packStart(icon, false, false, 0);
         box.packStart(label, true, true, 0);
         box.packEnd(button, false, true, 0);
         box.setSizeRequest(180, -1);
