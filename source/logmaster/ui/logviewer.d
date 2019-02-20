@@ -199,6 +199,8 @@ class LogViewer : Box {
 
             CellRendererText renderer = new CellRendererText();
             renderer.setProperty("text", message);
+            import gdk.Color;
+            renderer.setProperty("foreground-gdk", new Color(255, 0, 0));
             renderer.setProperty("family", "Monospace");
             renderer.render(*c, layout, &rect, &rect, GtkCellRendererState.INSENSITIVE);
         }
