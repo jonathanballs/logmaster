@@ -263,17 +263,20 @@ class LogmasterWindow : MainWindow {
         button.setImage(new Image(StockID.CLOSE, GtkIconSize.MENU));
 
         auto icon = new Image();
+        icon.setFromIconName("folder-documents-symbolic", GtkIconSize.MENU);
 
-        import logmaster.backends.subprocess;
-        if (typeid(backend) == typeid(SubprocessBackend)) {
-            import gdk.Pixbuf;
-            auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
-            icon.setFromPixbuf(kubeIcon);
-            icon.setMarginRight(8);
-        } else {
-            icon.setFromIconName("folder-documents-symbolic", GtkIconSize.MENU);
-            icon.setMarginRight(8);
+        try {
+            import logmaster.backends.subprocess;
+            if (typeid(backend) == typeid(SubprocessBackend)) {
+                import gdk.Pixbuf;
+                auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
+                icon.setFromPixbuf(kubeIcon);
+            }
+        } catch (Exception e) {
+            writeln("Failed to load icon ", e);
         }
+
+        icon.setMarginRight(8);
 
         label.setHexpand(true);
         label.setEllipsize(PangoEllipsizeMode.END);
