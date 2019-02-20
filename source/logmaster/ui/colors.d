@@ -18,12 +18,22 @@ enum HighlightType {
 auto dateRE = ctRegex!("[0-9]+\\-[0-9]+\\-[0-9]+ [0-9]+:[0-9]+");
 auto numberRE = ctRegex!("[0-9\\.]+");
 
-alias ColoredString = Tuple!(string, "message", HighlightType, "type");
+alias HighlightedString = Tuple!(string, "message", HighlightType, "type");
+alias ColoredString = Tuple!(string, "message", Color, "color");
 alias ColorScheme = Color[HighlightType];
 
-ColoredString[] highlightString(string s) {
+ColorScheme afterglow;
+static this() {
+    afterglow = [
+        HighlightType.None: new Color(214, 214, 214),
+        HighlightType.Number: new Color(180, 201, 115),
+        HighlightType.Timestamp: new Color(108, 153, 187),
+    ];
+}
+
+private HighlightedString[] highlightString(string s) {
     auto r = highlightString(s, dateRE, HighlightType.Timestamp);
-    ColoredString[] r2;
+    HighlightedString[] r2;
     foreach(hs; r) {
         if (hs.type == HighlightType.None) {
             r2 ~= highlightString(hs.message, numberRE, HighlightType.Number);
@@ -35,17 +45,26 @@ ColoredString[] highlightString(string s) {
     return r2;
 }
 
-private ColoredString[] highlightString(string s, Regex!char re, HighlightType t) {
-    ColoredString[] r;
+private HighlightedString[] highlightString(string s, Regex!char re, HighlightType t) {
+    HighlightedString[] r;
     ulong offset;
     foreach(m; s.matchAll(re)) {
         if (m.pre[offset..$].length)
-            r ~= ColoredString(m.pre[offset..$], HighlightType.None);
-        r ~= ColoredString(m.hit, t);
+            r ~= HighlightedString(m.pre[offset..$], HighlightType.None);
+        r ~= HighlightedString(m.hit, t);
         offset = m.pre.length + m.hit.length;
     }
     if (s[offset..$].length)
-        r ~= ColoredString(s[offset..$], HighlightType.None);
+        r ~= HighlightedString(s[offset..$], HighlightType.None);
+    return r;
+}
+
+ColoredString[] colorString(string s) {
+    auto highlighted = highlightString(s);
+    ColoredString[] r;
+    foreach(h; highlighted) {
+        r ~= ColoredString(h.message, afterglow[h.type]);
+    }
     return r;
 }
 

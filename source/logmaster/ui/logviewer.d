@@ -194,15 +194,22 @@ class LogViewer : Box {
             if (lineNumber >= lines.length) break;
             string message = lines[lineNumber].message;
 
-            GdkRectangle rect = GdkRectangle(x, y + i*rowHeight,
-                cast(uint) lines.longestLineLength*charWidth, this.rowHeight);
+            import logmaster.ui.colors : colorString;
+            auto coloredString = colorString(message);
+            uint offset;
 
-            CellRendererText renderer = new CellRendererText();
-            renderer.setProperty("text", message);
-            import gdk.Color;
-            renderer.setProperty("foreground-gdk", new Color(255, 0, 0));
-            renderer.setProperty("family", "Monospace");
-            renderer.render(*c, layout, &rect, &rect, GtkCellRendererState.INSENSITIVE);
+            foreach(cs; coloredString) {
+                GdkRectangle rect = GdkRectangle(x + offset*charWidth, y + i*rowHeight,
+                    cast(uint) lines.longestLineLength*charWidth, this.rowHeight);
+
+                CellRendererText renderer = new CellRendererText();
+                renderer.setProperty("text", cs.message);
+                renderer.setProperty("foreground-gdk", cs.color);
+                renderer.setProperty("family", "Monospace");
+                renderer.render(*c, layout, &rect, &rect, GtkCellRendererState.INSENSITIVE);
+
+                offset += cast(uint) cs.message.length;
+            }
         }
 
         return true;
