@@ -104,28 +104,6 @@ class LogmasterWindow : MainWindow {
     bool onKeyPress(GdkEventKey* g, Widget w) {
         auto currentLogViewer = cast(LogViewer) notebook.getNthPage(notebook.getCurrentPage);
 
-        if (currentLogViewer.searchBar.getSearchMode()) {
-            import gdk.Event : Event;
-            GdkEvent* e = cast(GdkEvent*) g;
-            auto event = new Event(e);
-
-            if (g.keyval == Keysyms.GDK_Return) {
-                string searchString = currentLogViewer.searchEntry.getText();
-                if (searchString) {
-                    auto filter = new RegexFilter(currentLogViewer.backend, searchString);
-                    currentLogViewer.backend.setFilter(filter);
-                } else {
-                    currentLogViewer.backend.setFilter(null);
-                }
-                currentLogViewer.queueDraw();
-            }
-
-            if (g.state & ModifierType.CONTROL_MASK && g.keyval == Keysyms.GDK_f)
-                currentLogViewer.toggleSearchBar();
-
-            return currentLogViewer.searchEntry.handleEvent(event);
-        }
-
         // If CTRL key pressed
         if (g.state & ModifierType.CONTROL_MASK) {
             switch(g.keyval) {
@@ -147,6 +125,7 @@ class LogmasterWindow : MainWindow {
                 break;
             // Quit the program
             case Keysyms.GDK_q:
+            // TODO: Confirmation?
                 this.destroy();
                 break;
 
@@ -158,7 +137,7 @@ class LogmasterWindow : MainWindow {
                 } else {
                     notebook.setCurrentPage(0);
                 }
-                break;
+                return true;
             // Cycle tabs backwards. Not sure why have to handle it like this...
             case Keysyms.GDK_ISO_Left_Tab:
                 int prevPageNumber = notebook.getCurrentPage() - 1;
@@ -167,7 +146,7 @@ class LogmasterWindow : MainWindow {
                 } else {
                     notebook.setCurrentPage(prevPageNumber);
                 }
-                break;
+                return true;
             case Keysyms.GDK_k:
                 if (this.commandLauncher) break;
                 this.commandLauncher = new CommandLauncher(this, (string podName) {
@@ -186,6 +165,26 @@ class LogmasterWindow : MainWindow {
                 break;
             }
         }
+
+        if (currentLogViewer.searchBar.getSearchMode()) {
+            import gdk.Event : Event;
+            GdkEvent* e = cast(GdkEvent*) g;
+            auto event = new Event(e);
+
+            if (g.keyval == Keysyms.GDK_Return) {
+                string searchString = currentLogViewer.searchEntry.getText();
+                if (searchString) {
+                    auto filter = new RegexFilter(currentLogViewer.backend, searchString);
+                    currentLogViewer.backend.setFilter(filter);
+                } else {
+                    currentLogViewer.backend.setFilter(null);
+                }
+                currentLogViewer.queueDraw();
+            }
+
+            return currentLogViewer.searchEntry.handleEvent(event);
+        }
+
         return true;
     }
 
