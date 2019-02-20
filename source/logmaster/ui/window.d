@@ -23,6 +23,7 @@ import logmaster.constants;
 import logmaster.backends;
 import logmaster.backendevents;
 import logmaster.filters;
+import logmaster.resources;
 import logmaster.ui.logviewer;
 import logmaster.ui.commandlauncher;
 
@@ -57,7 +58,7 @@ class LogmasterWindow : MainWindow {
         // Kubernetes button
         auto icon = new Image();
         icon.setFromIconName("folder-documents-symbolic", GtkIconSize.MENU);
-        auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
+        auto kubeIcon = new Pixbuf(getResourcePath("icons/kubernetes.svg"), 18, 18);
         icon.setFromPixbuf(kubeIcon);
         Button kubernetesButton = new Button();
         kubernetesButton.setImage(icon);
@@ -291,7 +292,7 @@ class LogmasterWindow : MainWindow {
             import logmaster.backends.subprocess;
             if (typeid(backend) == typeid(SubprocessBackend)) {
                 import gdk.Pixbuf;
-                auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
+                auto kubeIcon = new Pixbuf(getResourcePath("icons/kubernetes.svg"), 18, 18);
                 icon.setFromPixbuf(kubeIcon);
             }
         } catch (Exception e) {
