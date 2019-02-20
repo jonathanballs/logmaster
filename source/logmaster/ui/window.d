@@ -54,6 +54,29 @@ class LogmasterWindow : MainWindow {
         headerBar.packStart(openLogButton);
         this.setTitlebar(headerBar);
 
+        // Kubernetes button
+        auto icon = new Image();
+        icon.setFromIconName("folder-documents-symbolic", GtkIconSize.MENU);
+        auto kubeIcon = new Pixbuf("source/logmaster/icons/kubernetes.svg", 18, 18);
+        icon.setFromPixbuf(kubeIcon);
+        Button kubernetesButton = new Button();
+        kubernetesButton.setImage(icon);
+        kubernetesButton.addOnClicked((Button b) {
+            if (this.commandLauncher) return;
+            this.commandLauncher = new CommandLauncher(this, (string podName) {
+                this.commandLauncher.destroy();
+                import logmaster.backends.subprocess;
+                auto backend = new SubprocessBackend(
+                    ["kubectl", "logs", "-f", podName], podName);
+                this.addBackend(backend);
+            });
+            this.addTickCallback(&commandLauncher.checkPid);
+            this.commandLauncher.addOnDestroy((Widget w) {
+                this.commandLauncher = null;
+            });
+        });
+        headerBar.packStart(kubernetesButton);
+
         // Create the notebook
         this.notebook = new Notebook();
         this.notebook.setTabPos(GtkPositionType.LEFT);
