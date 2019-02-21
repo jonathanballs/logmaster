@@ -1,6 +1,7 @@
 module logmaster.ui.window;
 
 import std.concurrency;
+import std.file;
 import std.stdio;
 import core.time;
 
@@ -39,12 +40,18 @@ class LogmasterWindow : MainWindow {
     HeaderBar headerBar;
     CommandLauncher commandLauncher;
 
+    // Features
+    bool featureKubernetes;
+
     /// Sets up a new logmaster window with sidebar, panes, logview etc.
     this() {
         // Initialise
         super(Constants.appName);
         this.setDefaultSize(Constants.appDefaultWidth,
             Constants.appDefaultHeight);
+
+        // Feature detection
+        featureKubernetes = exists("/usr/bin/kubectl");
 
         // Header bar
         headerBar = new HeaderBar();
@@ -76,6 +83,11 @@ class LogmasterWindow : MainWindow {
                 this.commandLauncher = null;
             });
         });
+        kubernetesButton.setTooltipText("Kubernetes");
+        if (!featureKubernetes) {
+            kubernetesButton.setSensitive(false);
+            kubernetesButton.setTooltipText("Install kubectl to use kubernetes");
+        }
         headerBar.packStart(kubernetesButton);
 
         // Create the notebook
@@ -149,7 +161,7 @@ class LogmasterWindow : MainWindow {
                 }
                 return true;
             case Keysyms.GDK_k:
-                if (this.commandLauncher) break;
+                if (this.commandLauncher || !this.featureKubernetes) break;
                 this.commandLauncher = new CommandLauncher(this, (string podName) {
                     this.commandLauncher.destroy();
                     import logmaster.backends.subprocess;
