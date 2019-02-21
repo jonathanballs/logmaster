@@ -74,6 +74,9 @@ class CommandLauncher : Dialog {
         this.searchEntry.setHexpand(true);
         this.searchEntry.setSizeRequest(600, -1);
         this.searchEntry.activate();
+        this.searchEntry.setPlaceholderText("Kubernetes Pod Name");
+        // TODO: Set placeholder viewable when it can be used.
+        // https://gitlab.gnome.org/GNOME/gtk/commit/7aad0896a73e6957c8d5ef65d59b2d0891df1b9c
         this.searchEntry.addOnChanged((EditableIF) {
             this.filterString = searchEntry.getText();
 

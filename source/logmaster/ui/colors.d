@@ -15,8 +15,14 @@ enum HighlightType {
     String
 }
 
-auto dateRE = ctRegex!("[0-9]+\\-[0-9]+\\-[0-9]+ [0-9]+:[0-9]+");
-auto numberRE = ctRegex!("[0-9\\.]+");
+auto dateRE = regex([
+    "[0-9]+\\-[0-9]+\\-[0-9]+ [0-9]+:[0-9]+",
+    "(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])"
+        ~ "T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?(Z)",
+    "([\\w:/]+\\s[+\\-]\\d{4})"
+]);
+
+auto numberRE = ctRegex!("[0-9]+[0-9.]*");
 
 alias HighlightedString = Tuple!(string, "message", HighlightType, "type");
 alias ColoredString = Tuple!(string, "message", Color, "color");
