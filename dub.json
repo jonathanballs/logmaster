@@ -1,6 +1,6 @@
 {
 	"description": "A log viewer",
-	"license": "proprietary",
+	"license": "MIT",
 	"authors": [
 		"Jonathan Balls"
 	],
