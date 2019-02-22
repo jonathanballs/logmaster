@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=0.0.1
+Name=Logmaster
+Comment=Log viewer and analyser
+TryExec=/home/jonathan/coding/logmaster/logmaster
+Exec=/home/jonathan/coding/logmaster/logmaster
+Icon=/home/jonathan/.local/logmaster.xpm
+Terminal=false
+Type=Application
+Categories=Logging;Gtk;Development
+
