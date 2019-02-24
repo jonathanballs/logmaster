@@ -12,6 +12,7 @@ import gtk.Dialog;
 import gtk.EditableIF;
 import gtk.HeaderBar;
 import gtk.ListStore;
+import gtk.MessageDialog;
 import gtk.ScrolledWindow;
 import gtk.SearchEntry;
 import gtk.Spinner;
@@ -157,56 +158,76 @@ class CommandLauncher : Dialog {
         if (destroyed) return false;
 
         if (this.kubectl.done) {
-            // Fill in the list of pods
-            string[] podNames;
-            JSONValue j = parseJSON(this.kubectl.yieldForce().output);
+            // Lots of places this could go wrong - bad connectivity, weird
+            // kubernetes version giving a bad response etc. Just catch all and
+            // try to report to user if something goes wrong.
+            try {
+                // Fill in the list of pods
+                string[] podNames;
+                JSONValue j = parseJSON(this.kubectl.yieldForce().output);
 
-            foreach (pod; j["items"].array) {
-                podNames ~= pod["metadata"]["name"].str;
-            }
-
-            // Create the list store
-            this.listStore = new ListStore([GType.STRING]);
-            foreach(podName; podNames) {
-                this.iters ~= listStore.createIter();
-                listStore.setValue(iters[$-1], 0, podName);
-            }
-
-            // Filter
-            this.treeModelFilter = new TreeModelFilter(listStore, null);
-            this.treeModelFilter.setVisibleFunc(&filterTree, &this.filterString, null);
-            this.treeModelFilter.refilter();
-
-            // Create the tree view
-            this.treeView = new TreeView();
-            treeView.setModel(treeModelFilter);
-            treeView.setHeadersVisible(false);
-            this.treeView.getSelection.addOnChanged((TreeSelection s) {
-                auto selectedIter = this.treeView.getSelectedIter();
-                if (selectedIter) {
-                    auto selectedPath = treeModelFilter.getPath(selectedIter);
-                    this.treeView.scrollToCell(selectedPath, null, false, 0, 0);
+                foreach (pod; j["items"].array) {
+                    podNames ~= pod["metadata"]["name"].str;
                 }
-            });
 
-            auto column = new TreeViewColumn(
-                "Pod Name", new CellRendererText(), "text", 0);
-            treeView.appendColumn(column);
-            scrolledWindow = new ScrolledWindow();
-            scrolledWindow.setVexpand(true);
-            scrolledWindow.add(this.treeView);
+                // Create the list store
+                this.listStore = new ListStore([GType.STRING]);
+                foreach(podName; podNames) {
+                    this.iters ~= listStore.createIter();
+                    listStore.setValue(iters[$-1], 0, podName);
+                }
 
-            // Selection
-            auto selection = treeView.getSelection();
-            selection.selectPath(new TreePath(true));
+                // Filter
+                this.treeModelFilter = new TreeModelFilter(listStore, null);
+                this.treeModelFilter.setVisibleFunc(&filterTree, &this.filterString, null);
+                this.treeModelFilter.refilter();
 
-            this.getContentArea().remove(this.spinner);
-            this.getContentArea().add(scrolledWindow);
-            this.getContentArea().showAll();
+                // Create the tree view
+                this.treeView = new TreeView();
+                treeView.setModel(treeModelFilter);
+                treeView.setHeadersVisible(false);
+                this.treeView.getSelection.addOnChanged((TreeSelection s) {
+                    auto selectedIter = this.treeView.getSelectedIter();
+                    if (selectedIter) {
+                        auto selectedPath = treeModelFilter.getPath(selectedIter);
+                        this.treeView.scrollToCell(selectedPath, null, false, 0, 0);
+                    }
+                });
 
-            // Scroll to top
-            this.treeView.scrollToCell(new TreePath(true), null, true, 0, 0);
-            return false;
+                auto column = new TreeViewColumn(
+                    "Pod Name", new CellRendererText(), "text", 0);
+                treeView.appendColumn(column);
+                scrolledWindow = new ScrolledWindow();
+                scrolledWindow.setVexpand(true);
+                scrolledWindow.add(this.treeView);
+
+                // Selection
+                auto selection = treeView.getSelection();
+                selection.selectPath(new TreePath(true));
+
+                this.getContentArea().remove(this.spinner);
+                this.getContentArea().add(scrolledWindow);
+                this.getContentArea().showAll();
+
+                // Scroll to top
+                this.treeView.scrollToCell(new TreePath(true), null, true, 0, 0);
+                return false;
+            } catch (Exception e) {
+                // In case of errors just close this and show an error message.
+                this.destroy();
+                string message = "Failed to load kubernetes pod list: " ~ cast(string) e.message;
+                auto errorWindow = new MessageDialog(
+                    parent,
+                    GtkDialogFlags.MODAL,
+                    GtkMessageType.ERROR,
+                    GtkButtonsType.OK,
+                    false,
+                    message
+                    );
+                errorWindow.run();
+                errorWindow.destroy();
+                return false;
+            }
         }
         return true;
     }
