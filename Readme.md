@@ -9,7 +9,7 @@ Logmaster is still alpha software and may be buggy and unoptimised in certain pl
 ![Screenshot](/screenshot.png)
 
 ## Compiling
-You will need the D build tools to compile logmaster. Navigate to the root directory and run `dub build`.
+You will need the D build tools to compile logmaster. Navigate to the root directory and run `dub build`. Only the latest versions of DMD and LDC are supported. NB: The dmd compiler that ships with Ubuntu 18.04 will not compile logmaster.
 
 ## Installing
 Arch Linux: Install [`logmaster-git`](https://aur.archlinux.org/packages/logmaster-git/) from the AUR.
