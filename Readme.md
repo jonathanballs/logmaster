@@ -1,4 +1,4 @@
-# Logmaster
+# Logmaster [![Build Status](https://travis-ci.org/jonathanballs/logmaster.svg?branch=master)](https://travis-ci.org/jonathanballs/logmaster)
 
 Logmaster is a log viewer for Linux built with GTK and D. Features include being able to read very large files (multiple gigabytes and bigger than user's memory), highlighting, searching, following, kubernetes support, unix pipe support and more.
 
