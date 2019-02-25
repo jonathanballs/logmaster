@@ -14,7 +14,7 @@ You will need the D build tools to compile logmaster. Navigate to the root direc
 ## Installing
 Arch Linux: Install [`logmaster-git`](https://aur.archlinux.org/packages/logmaster-git/) from the AUR.
 
-Ubuntu: Coming soon...
+Ubuntu: We are very grateful to have our package hosting provided by [packagecloud.io](https://packagecloud.io). Coming soon.
 
 ## Command line usage
 Open a file: `logmaster file.log`
