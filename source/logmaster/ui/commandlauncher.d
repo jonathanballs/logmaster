@@ -155,7 +155,7 @@ class CommandLauncher : Dialog {
 
 
     bool checkPid(Widget w, FrameClock f) {
-        if (destroyed) return false;
+        if (destroyed || this.scrolledWindow) return false;
 
         if (this.kubectl.done) {
             // Lots of places this could go wrong - bad connectivity, weird
