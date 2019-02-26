@@ -10,6 +10,7 @@ import std.range;
 import std.stdio;
 import std.string;
 import core.time;
+import core.sys.posix.sys.stat;
 
 import logmaster.backends;
 import logmaster.backendevents;
@@ -137,16 +138,19 @@ private class FileIndexer {
     this(string filename, BackendID backendID) {
         this.filename = filename;
         this.backendID = backendID;
+        lineOffsets = [0];
     }
 
 
     void start() {
-        ulong bufNum;
         f = File(filename);
-        lineOffsets ~= 0;
+        // Get file stats
+        stat_t stat_buf;
+        fstat(f.fileno, &stat_buf);
 
-        foreach (ubyte[] buf; f.byChunk(new ubyte[BUFSIZ])) {
-            auto offset = (bufNum * BUFSIZ); // Index after the nl char
+        ulong bufNum;
+        foreach (ubyte[] buf; f.byChunk(new ubyte[stat_buf.st_blksize])) {
+            auto offset = (bufNum * stat_buf.st_blksize); // Index after the nl char
 
             foreach (j, b; buf) {
                 if (b == '\n') {
