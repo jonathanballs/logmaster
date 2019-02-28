@@ -37,8 +37,7 @@ int main(string[] args)
         // Check if filename is actually stdin
         if (filename == "-") {
             auto stdinName = getStdinName();
-            auto stdinShortName = stdinName.split(' ')[0];
-            // window.addBackend(new UnixStreamBackend(stdin, stdinShortName, stdinName));
+            window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         } else {
             window.addBackend(new FileBackend(filename));
         }
@@ -52,7 +51,7 @@ int main(string[] args)
 
     // Open these automatically during development just to be quick
     debug {
-        if (opts.files.canFind(["-"])) {
+        if (!opts.files.canFind(["-"])) {
             window.addBackend(new UnixStreamBackend(stdin, "stdin"));
         }
         window.addBackend(new FileBackend("/var/log/pacman.log"));
