@@ -165,7 +165,7 @@ class LogViewer : Box {
 
         auto charWidth = 9;
         layout.setSize(cast (uint) lines.longestLineLength * charWidth,
-            rowHeight * cast(uint) lines.length);
+            rowHeight * cast(uint) lines.length + rowHeight/2);
 
         if (this.followButton.getActive()) {
             Adjustment adj = layout.getVadjustment();
