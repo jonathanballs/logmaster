@@ -6,9 +6,12 @@ import std.conv;
 import std.datetime.stopwatch;
 import std.file;
 import std.path;
+import std.parallelism;
+import std.mmfile;
 import std.range;
 import std.stdio;
 import std.string;
+import core.atomic;
 import core.time;
 import core.sys.posix.sys.stat;
 
@@ -103,7 +106,7 @@ class FileBackend : LoggingBackend {
             if (_lines.lineOffsets.length != e.lineOffsetsLength) startIndex--;
             import std.range : slide;
             import std.algorithm : max;
-            foreach(pair; _lines.lineOffsets[startIndex..$-1].slide(2)) {
+            foreach(pair; _lines.lineOffsets[startIndex..$].slide(2)) {
                 _lines._longestLineLength = max(_lines.longestLineLength, pair[1] - pair[0]);
             }
 
@@ -131,62 +134,69 @@ class FileBackend : LoggingBackend {
 private class FileIndexer {
     string filename;
     BackendID backendID;
-
-    File f;
-    ulong[] lineOffsets;
+    MmFile file;
+    Tid mainTid;
 
     this(string filename, BackendID backendID) {
         this.filename = filename;
         this.backendID = backendID;
-        lineOffsets = [0];
+        this.mainTid = ownerTid();
     }
 
-
     void start() {
-        f = File(filename);
-        // Get file stats
-        stat_t stat_buf;
-        fstat(f.fileno, &stat_buf);
+        file = new MmFile(this.filename);
+        auto bufsize = BUFSIZ;
 
-        ulong bufNum;
-        foreach (ubyte[] buf; f.byChunk(new ubyte[stat_buf.st_blksize])) {
-            auto offset = (bufNum * stat_buf.st_blksize); // Index after the nl char
+        size_t[][] offsets;
+        if (file.length == 0) return;
 
-            foreach (j, b; buf) {
-                if (b == '\n') {
-                    lineOffsets ~= offset + j + 1;
+        offsets.length = 1 + (file.length - 1) / bufsize;
+        offsets[0] = [0];
+
+        StopWatch s;
+        s.start();
+
+        shared(ulong) numComplete;
+
+        foreach (i, ref offsetList; parallel(offsets)) {
+            auto start = i*BUFSIZ;
+            auto end = min((i+1)*BUFSIZ, file.length);
+            foreach(j; start..end) {
+                if (file[j] == '\n') {
+                    offsetList ~= j+1;
                 }
             }
 
-            // Send updates to front end
-            if (!(bufNum % 1000)) {
-                sendLineOffsets();
+            numComplete.atomicOp!"+="(1);
+            if ((numComplete % 100) == 0) {
+                float progress = cast(float) (numComplete * BUFSIZ) / file.length;
+                sendEvent(EventIndexingProgress(progress));
             }
-
-            bufNum++;
         }
-        sendLineOffsets();
-        this.sendEvent(EventIndexingProgress(1.0));
+
+        sendLineOffsets(offsets.joiner().array);
+
+        s.stop();
     }
 
-    protected void sendLineOffsets() {
+    protected void sendLineOffsets(ulong[] lineOffsets) {
         auto e = EventIndexingProgress();
-        e.progressPercentage = (cast(float) f.tell() / f.size());
 
         // Split the new indexes into chunks
         import std.range: chunks;
+        long bufNum;
         foreach (chunk; lineOffsets.chunks(e.lineOffsets.length)) {
             e.lineOffsets[0..chunk.length] = chunk;
             e.lineOffsetsLength = cast(short) chunk.length;
+            e.progressPercentage = cast(float) lineOffsets.length / (bufNum++*e.lineOffsets.length);
             this.sendEvent(e);
         }
-        this.lineOffsets = [];
     }
 
     protected void sendEvent(T)(T event) {
         BackendEvent b;
         b.backendID = this.backendID;
         b.payload = event;
-        send(ownerTid(), b);
+        send(mainTid, b);
     }
 }
